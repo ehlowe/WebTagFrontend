@@ -2,10 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 import './App.css';
 
-
-// const ASSET_PATH = 'development' === 'development' ? "./assets" : "./project/dist/assets";
-
-const ASSET_PATH="./assets";
+const mode="p";
+let ASSET_PATH="./assets";
+if (mode==="p"){
+  ASSET_PATH="./project/dist/assets";
+}
 
 const constraints = {
   video: {
@@ -166,10 +167,10 @@ function App() {
     try {
       resumeAudioContext();
       loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
-      loadSound('hit', '/sounds/hit/hitfast.mp3');
-      loadSound('kill', '/sounds/kill/kill.mp3');
-      loadSound('reload', '/sounds/reload/reload.mp3');
-      loadSound('dead', '/sounds/dead/aDead.mp3');
+      loadSound('hit', ASSET_PATH+'/sounds/hit/hitfast.mp3');
+      loadSound('kill', ASSET_PATH+'/sounds/kill/kill.mp3');
+      loadSound('reload', ASSET_PATH+'/sounds/reload/reload.mp3');
+      loadSound('dead', ASSET_PATH+'/sounds/dead/aDead.mp3');
 
       wsRef.current = new WebSocket(serverUrl);
 
