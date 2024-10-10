@@ -195,7 +195,7 @@ function App() {
         wsRef.current.send(JSON.stringify(message));
       };
 
-      let event_data = null;
+
 
       wsRef.current.onmessage = (event) => {
         event_data=event.data;
@@ -240,7 +240,7 @@ function App() {
     } catch (error) {
       console.error('Error:', error);
       let error_str = error.message;
-      setError('Failed to connect to the server'+error_str+" data: "+event_data);
+      setError('Failed to connect to the server'+error_str+" error line number: "+error.lineNumber);
       addLog(`Connection error: ${error.message}`);
     }
   };
@@ -500,7 +500,7 @@ function App() {
             placeholder="Enter lobby ID (optional)"
             style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' }}
           />
-          <button onClick={connectToLobby} disabled={!!cameraError}>Connect to Lobby M2</button>
+          <button onClick={connectToLobby} disabled={!!cameraError}>Connect to Lobby M3</button>
         </div>
       ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
