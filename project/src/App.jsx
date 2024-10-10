@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef} from 'react';
 
+const asset_path="project/dist/assets/";
 
 const App = () => {
   const audioContext = useRef(null);
@@ -23,7 +24,7 @@ const App = () => {
 
   return (
     <div>
-      <button onClick={loadSound('kick', 'sounds/kick.wav')}>Load Kick</button>
+      <button onClick={loadSound('kick', asset_path+'sounds/kick.wav')}>Load Kick</button>
     </div>
   );
 }
