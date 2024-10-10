@@ -1,28 +1,83 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import './App.css';
-import useAudioManager from './am';
-import PopupExample from './menu.jsx';
+
+
+// const ASSET_PATH = 'development' === 'development' ? "./assets" : "./project/dist/assets";
+
+const ASSET_PATH="./assets";
 
 const constraints = {
   video: {
     facingMode: 'environment',
-    height: { min: 960, max: 2500}
-    // width: { min: 1080, ideal: 1080, max: 1080 }, // lock width to 1080px
-    // height: { min: 1920, ideal: 1920, max: 1920 } // lock height to 1920px
-
-    // width: { min: 1079, ideal: 1080 , max: 1081},
-    // height: { ideal: 1920, min: 1200, max: 2500}
-    // width: { ideal: 720 , max: 1200},
-    // height: { ideal: 1280 }
-    // width: { ideal: 1920 },
-    // height: { ideal: 1080 }
-    
-    // width: { ideal: 1280 },
-    // height: { ideal: 720 }
-    // width: { ideal: 1920 },
-    // height: { ideal: 1080 }
+    height: { min: 960, max: 1500}
   }
 };
+
+
+
+
+const useAudioManager = () => {
+  const audioContext = useRef(null);
+  const audioBuffers = useRef({});
+
+  const loadSound = useCallback(async (name, url) => {
+    if (!audioContext.current) {
+      console.warn('AudioContext not initialized. Call resumeAudioContext first.');
+      return;
+    }
+
+    try {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const audioBuffer = await audioContext.current.decodeAudioData(arrayBuffer);
+      audioBuffers.current[name] = audioBuffer;
+    } catch (error) {
+      console.error('Error loading sound:', error);
+    }
+  }, []);
+
+  const playSound = useCallback((name) => {
+    if (!audioContext.current || !audioBuffers.current[name]) {
+      console.warn('AudioContext not initialized or sound not loaded.');
+      return;
+    }
+
+    const source = audioContext.current.createBufferSource();
+    source.buffer = audioBuffers.current[name];
+    source.connect(audioContext.current.destination);
+    source.start(0);
+  }, []);
+
+  const resumeAudioContext = useCallback(() => {
+    if (!audioContext.current) {
+      audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    if (audioContext.current.state !== 'running') {
+      audioContext.current.resume().then(() => {
+        console.log('Audio context resumed');
+      }).catch((error) => {
+        console.error('Error resuming audio context:', error);
+      });
+    }else{
+      console.log('Audio context already running');
+    }
+
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (audioContext.current) {
+        audioContext.current.close();
+      }
+    };
+  }, []);
+
+  return { loadSound, playSound, resumeAudioContext };
+};
+
+
 
 function getHealthColor(health, maxHealth) {
   health = Math.max(0, Math.min(health, maxHealth));
@@ -41,6 +96,7 @@ function App() {
   const [cameraError, setCameraError] = useState(null);
   const [serverUrl, setServerUrl] = useState('');
   const [lobbyId, setLobbyId] = useState(null);
+  const [latencyNum, setLatencyNum] = useState(0);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState(null);
 
@@ -58,7 +114,6 @@ function App() {
 
   const reloadIntervalRef = useRef(null);
   const [reloadStartTime, setReloadStartTime] = useState(0);
-  const [latencyNum, setLatencyNum] = useState(0);
   const [ammo, setAmmo] = useState(mag_size);
   const varReloadState = useRef(false);
 
@@ -110,16 +165,11 @@ function App() {
   const connectToLobby = async () => {
     try {
       resumeAudioContext();
-      // delay 100ms
-      await new Promise(resolve => setTimeout(resolve, 100));
-      loadSound('shoot', './assets/sounds/shoot/acr.mp3');
-      loadSound('hit', './assets/sounds/hit/hitfast.mp3');
-      loadSound('kill', './assets/sounds/kill/kill.mp3');
-      loadSound('reload', './assets/sounds/reload/reload.mp3');
-      loadSound('dead', './assets/sounds/dead/aDead.mp3');
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      playSound('kill');
+      loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
+      loadSound('hit', '/sounds/hit/hitfast.mp3');
+      loadSound('kill', '/sounds/kill/kill.mp3');
+      loadSound('reload', '/sounds/reload/reload.mp3');
+      loadSound('dead', '/sounds/dead/aDead.mp3');
 
       wsRef.current = new WebSocket(serverUrl);
 
@@ -207,26 +257,7 @@ function App() {
   const sendImage = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN && !cameraError) {
       setAmmo(Math.max(0, ammo - 1));
-      
-
-
-      // let draw_start = Date.now();
-      // const context = canvasRef.current.getContext('2d');
-      // canvasRef.current.width = videoRef.current.videoWidth;
-      // canvasRef.current.height = videoRef.current.videoHeight;
-      // context.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      // canvasRef.current.toBlob((blob) => {
-      //   console.log("Draw time:", Date.now() - draw_start);
-      //   setLatencyNum(Date.now() - draw_start);
-      //   wsRef.current.send(blob);
-      //   addLog(`Image sent: ${blob.size} bytes`);
-      //   console.log("Image sent: ", blob.size, "bytes");
-      // }, 'image/jpeg', 1.0);
-      // lastSentTimeRef.current = Date.now();
       captureAndSendFrame();
-
-
-
       playSound('shoot');
     } else {
       setLatencyNum(67);
@@ -265,8 +296,6 @@ function App() {
       wsRef.current.send(blob);
       console.log(`Zoomed image sent: ${blob.size} bytes, dimensions: ${zoomedWidth}x${zoomedHeight}`);
     }, 'image/jpeg', 1.0);
-    // setLatencyNum(Date.now() - draw_start);
-    lastSentTimeRef.current = Date.now();
   }
 
   useEffect(() => {
@@ -396,7 +425,7 @@ function App() {
       <button 
         style={{
           position: "absolute",
-          height: "50px",
+          // height: "50px",
           width: "100%",
           height: "10%",
           fontSize: "20px",
@@ -425,7 +454,7 @@ function App() {
       <div>
         <button 
           style={{
-            height: "50px",
+            // height: "50px",
             width: "100%",
             height: "20%",
             fontSize: "20px"
@@ -456,10 +485,6 @@ function App() {
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
       )}
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {/* <div>
-        <PopupExample />
-      </div> */}
-      {/* <button onClick={change_camera}>Change Camera</button> */}
     </div>
   );
 }

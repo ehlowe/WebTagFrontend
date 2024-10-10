@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.mp3'],
   base: '/WebTagFrontend/',
-  build: {
-    outDir: '../'
-  }
+  // build: {
+  //   outDir: '../'
+  // }
 })
