@@ -236,7 +236,7 @@ function App() {
       setIsSending(true);
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to connect to the server');
+      setError('Failed to connect to the server', error);
       addLog(`Connection error: ${error.message}`);
     }
   };
