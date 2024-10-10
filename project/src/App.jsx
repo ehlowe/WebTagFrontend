@@ -1,33 +1,83 @@
-import React, { useState, useEffect, useCallback, useRef} from 'react';
+// const asset_path="project/dist/assets/";
+import React, { useState, useRef } from 'react';
 
-const asset_path="project/dist/assets/";
+// const ASSET_PATH="./project/dist/assets";
+const ASSET_PATH="./assets";
+const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 
 const App = () => {
-  const audioContext = useRef(null);
-  const audioBuffers = useRef({});
+  const [audioLoaded, setAudioLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const audioRef = useRef(new Audio(ASSET_PATH+AUDIO_FILE));
 
-  const loadSound = useCallback(async (name, url) => {
-    if (!audioContext.current) {
-      console.warn('AudioContext not initialized. Call resumeAudioContext first.');
-      return;
+  const loadSound = () => {
+    setError(null);
+    audioRef.current.load();
+    audioRef.current.oncanplaythrough = () => {
+      setAudioLoaded(true);
+    };
+    audioRef.current.onerror = () => {
+      setError('Failed to load audio. Please check the file path and format.');
+    };
+  };
+
+  const playSound = () => {
+    if (audioRef.current.paused) {
+      audioRef.current.play().catch(e => {
+        console.error('Error playing audio:', e);
+        setError('Failed to play audio. Please try again.');
+      });
+    } else {
+      audioRef.current.currentTime = 0;
     }
-  
-    try {
-      const response = await fetch(url);
-      const arrayBuffer = await response.arrayBuffer();
-      const audioBuffer = await audioContext.current.decodeAudioData(arrayBuffer);
-      audioBuffers.current[name] = audioBuffer;
-    } catch (error) {
-      console.error('Error loading sound:', error);
-    }
-  }, []);
+  };
 
   return (
-    <div>
-      <button onClick={loadSound('kick', asset_path+'sounds/kick.wav')}>Load Kick</button>
+    <div style={{ padding: '1rem', maxWidth: '400px', margin: '0 auto' }}>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Safari iOS Audio App</h1>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <button 
+          onClick={loadSound} 
+          disabled={audioLoaded}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: audioLoaded ? '#ccc' : '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: audioLoaded ? 'default' : 'pointer'
+          }}
+        >
+          {audioLoaded ? 'Audio Loaded' : 'Load Audio'}
+        </button>
+        <button 
+          onClick={playSound} 
+          disabled={!audioLoaded}
+          style={{
+            padding: '0.5rem 1rem',
+            backgroundColor: audioLoaded ? '#28a745' : '#ccc',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: audioLoaded ? 'pointer' : 'default'
+          }}
+        >
+          Play Audio
+        </button>
+        {error && (
+          <div style={{ 
+            backgroundColor: '#f8d7da', 
+            color: '#721c24', 
+            padding: '0.75rem', 
+            borderRadius: '4px', 
+            border: '1px solid #f5c6cb' 
+          }}>
+            {error}
+          </div>
+        )}
+      </div>
     </div>
   );
-}
-
+};
 
 export default App;
