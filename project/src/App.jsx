@@ -236,7 +236,8 @@ function App() {
       setIsSending(true);
     } catch (error) {
       console.error('Error:', error);
-      setError('Failed to connect to the server', error);
+      let error_str = error.message;
+      setError('Failed to connect to the server'+error_str);
       addLog(`Connection error: ${error.message}`);
     }
   };
@@ -496,7 +497,7 @@ function App() {
             placeholder="Enter lobby ID (optional)"
             style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' }}
           />
-          <button onClick={connectToLobby} disabled={!!cameraError}>Connect to Lobby</button>
+          <button onClick={connectToLobby} disabled={!!cameraError}>Connect to Lobby M</button>
         </div>
       ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
