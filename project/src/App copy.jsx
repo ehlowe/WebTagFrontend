@@ -1,5 +1,5 @@
 // const asset_path="project/dist/assets/";
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 
 const ASSET_PATH="./project/dist/assets";
 // const ASSET_PATH="./assets";
@@ -8,22 +8,17 @@ const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 const App = () => {
   const [audioLoaded, setAudioLoaded] = useState(false);
   const [error, setError] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const audioRef = useRef(new Audio(ASSET_PATH + AUDIO_FILE));
-  const intervalRef = useRef(null);
+  const audioRef = useRef(new Audio(ASSET_PATH+AUDIO_FILE));
 
   const loadSound = () => {
     setError(null);
     audioRef.current.load();
-    audioRef.current.play().then(() => {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
+    audioRef.current.oncanplaythrough = () => {
       setAudioLoaded(true);
-      setIsPlaying(true);
-    }).catch(e => {
-      console.error('Error loading audio:', e);
+    };
+    audioRef.current.onerror = () => {
       setError('Failed to load audio. Please check the file path and format.');
-    });
+    };
   };
 
   const playSound = () => {
@@ -37,27 +32,12 @@ const App = () => {
     }
   };
 
-  useEffect(() => {
-    if (isPlaying && audioLoaded) {
-      intervalRef.current = setInterval(playSound, 1000);
-    }
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
-    };
-  }, [isPlaying, audioLoaded]);
-
-  const togglePlayback = () => {
-    setIsPlaying(prev => !prev);
-  };
-
   return (
     <div style={{ padding: '1rem', maxWidth: '400px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>Safari iOS Audio App</h1>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <button
-          onClick={loadSound}
+        <button 
+          onClick={loadSound} 
           disabled={audioLoaded}
           style={{
             padding: '0.5rem 1rem',
@@ -70,8 +50,8 @@ const App = () => {
         >
           {audioLoaded ? 'Audio Loaded' : 'Load Audio'}
         </button>
-        <button
-          onClick={togglePlayback}
+        <button 
+          onClick={playSound} 
           disabled={!audioLoaded}
           style={{
             padding: '0.5rem 1rem',
@@ -82,10 +62,16 @@ const App = () => {
             cursor: audioLoaded ? 'pointer' : 'default'
           }}
         >
-          {isPlaying ? 'Stop Playback' : 'Start Playback'}
+          Play Audio
         </button>
         {error && (
-          <div style={{ backgroundColor: '#f8d7da', color: '#721c24', padding: '0.75rem', borderRadius: '4px', border: '1px solid #f5c6cb' }}>
+          <div style={{ 
+            backgroundColor: '#f8d7da', 
+            color: '#721c24', 
+            padding: '0.75rem', 
+            borderRadius: '4px', 
+            border: '1px solid #f5c6cb' 
+          }}>
             {error}
           </div>
         )}
