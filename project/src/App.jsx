@@ -198,7 +198,6 @@ function App() {
 
 
       wsRef.current.onmessage = (event) => {
-        event_data=event.data;
         let jsonString = event.data.replace(/'/g, '"');
         console.log(jsonString);
         let data = null;
@@ -500,7 +499,7 @@ function App() {
             placeholder="Enter lobby ID (optional)"
             style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' }}
           />
-          <button onClick={connectToLobby} disabled={!!cameraError}>Connect to Lobby M3</button>
+          <button onClick={connectToLobby} disabled={!!cameraError}>Connect to Lobby M4</button>
         </div>
       ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
