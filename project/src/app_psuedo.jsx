@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 
 import { getHealthColor, drawCrosshair, setupCamera } from "./core/misc";
 import { handleHealthUpdate, reloadTimed } from "./core/logic";
@@ -41,6 +41,17 @@ function App(){
     // last firing time
     const lastFiringTime = useRef(0);
     const [triggerPulled, setTriggerPulled] = useState(false);
+    const [isPressed, setIsPressed] = useState(false);
+    const handlePressStart = useCallback(() => {
+        setIsPressed(true);
+        shootPressed(); // Your existing shootPressed function
+    }, []);
+    
+    const handlePressEnd = useCallback(() => {
+        setIsPressed(false);
+        shootReleased(); // Your existing shootReleased function
+    }, []);
+
     const [fireColor, setFireColor] = useState("gray");
     const audioRef = useRef(null);
     const shootSoundRef = useRef(null);
@@ -215,6 +226,22 @@ function App(){
 
     }, [triggerPulled, lastFiringTime, ammo]);
 
+    useEffect(() => {
+        const handleGlobalMouseUp = () => {
+          if (isPressed) {
+            handlePressEnd();
+          }
+        };
+    
+        document.addEventListener('mouseup', handleGlobalMouseUp);
+        document.addEventListener('touchend', handleGlobalMouseUp);
+    
+        return () => {
+          document.removeEventListener('mouseup', handleGlobalMouseUp);
+          document.removeEventListener('touchend', handleGlobalMouseUp);
+        };
+    }, [isPressed, handlePressEnd]);
+
 
     // if reload is triggered handle logic
     function reloadFunction(){
@@ -270,6 +297,9 @@ function App(){
             msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
             WebkitTapHighlightColor: "rgba(0,0,0,0)",  // 
             }}
+            onMouseDown={handlePressStart}
+            onTouchStart={handlePressStart}
+
             // onMouseDown={shootPressed} 
             // onMouseUp={shootReleased} 
             // onTouchStart={shootPressed}
@@ -280,29 +310,30 @@ function App(){
             //     }
             //   }}
             // onMouseLeave={shootReleased}
-            onMouseDown={(e) => {
-                e.preventDefault();
-                shootPressed();
-            }}
-            onMouseUp={(e) => {
-                e.preventDefault();
-                shootReleased();
-            }}
-            onTouchStart={(e) => {
-                e.preventDefault();
-                shootPressed();
-            }}
-            onTouchEnd={(e) => {
-                e.preventDefault();
-                shootReleased();
-            }}
-            onTouchCancel={(e) => {
-                e.preventDefault();
-                shootReleased();
-            }}
-            onContextMenu={
-                (e) => e.preventDefault()
-            }
+
+            // onMouseDown={(e) => {
+            //     e.preventDefault();
+            //     shootPressed();
+            // }}
+            // onMouseUp={(e) => {
+            //     e.preventDefault();
+            //     shootReleased();
+            // }}
+            // onTouchStart={(e) => {
+            //     e.preventDefault();
+            //     shootPressed();
+            // }}
+            // onTouchEnd={(e) => {
+            //     e.preventDefault();
+            //     shootReleased();
+            // }}
+            // onTouchCancel={(e) => {
+            //     e.preventDefault();
+            //     shootReleased();
+            // }}
+            // onContextMenu={
+            //     (e) => e.preventDefault()
+            // }
             
             // disabled={!connected || !!cameraError}
         >
