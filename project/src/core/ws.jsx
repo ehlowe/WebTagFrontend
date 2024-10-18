@@ -54,6 +54,7 @@ class WebSocketManager {
 function useWebSocket(connection_url) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
+  const [errorLogger, setErrorLogger] = useState([]);
   const wsManagerRef = useRef(null);
 
   useEffect(() => {
@@ -99,7 +100,7 @@ function useWebSocket(connection_url) {
     wsManagerRef.current.send(message);
   }, []);
 
-  return { isConnected, lastMessage, connect, disconnect, sendMessage };
+  return { isConnected, lastMessage, connect, disconnect, sendMessage, errorLogger };
 }
 
 export default useWebSocket;
