@@ -267,6 +267,11 @@ function App(){
             onMouseUp={shootReleased} 
             onTouchStart={shootPressed}
             onTouchCancel ={shootReleased}
+            onTouchMove={(e) => {
+                if (e.touches.length === 0) {
+                  shootReleased();
+                }
+              }}
             onMouseLeave={shootReleased}
             // disabled={!connected || !!cameraError}
         >
