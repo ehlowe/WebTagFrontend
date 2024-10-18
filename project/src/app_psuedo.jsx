@@ -55,10 +55,13 @@ function App(){
     const [fireColor, setFireColor] = useState("gray");
     const audioRef = useRef(null);
     const shootSoundRef = useRef(null);
+    const shootSoundRef2 = useRef(null);
+    const soundSelect=useRef(0);
 
     useEffect(() => {
         audioRef.current = new Audio(ASSET_PATH + AUDIO_FILE);
         shootSoundRef.current = new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3");
+        shootSoundRef2.current = new Audio(ASSET_PATH + "/sounds/hit/acr.mp3");
     }, []);
         // const audioRef = useRef(new Audio(ASSET_PATH + AUDIO_FILE));
         // const shootSoundRef = useRef(new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3"));
@@ -74,6 +77,27 @@ function App(){
         }).catch(e => {
             console.error('Error loading audio:', e);
         });
+    };
+
+    const loadShootSound2 = () => {
+        console.log("LOADING SHOOT SOUND 2")
+        shootSoundRef2.current.load();
+        shootSoundRef2.current.play().then(() => {
+            shootSoundRef2.current.pause();
+            shootSoundRef2.current.currentTime = 0;
+        }).catch(e => {
+            console.error('Error loading audio:', e);
+        });
+    };
+
+    const playShootSound2 = () => {
+        if (shootSoundRef2.current.paused) {
+            shootSoundRef2.current.play().catch(e => {
+                console.error('Error playing audio:', e);
+            });
+        } else {
+            shootSoundRef2.current.currentTime = 0;
+        }
     };
 
     const playShootSound = () => {
@@ -98,6 +122,7 @@ function App(){
         });
 
         loadShootSound();
+        loadShootSound2();
     };
 
     const playSound = () => {
@@ -209,7 +234,14 @@ function App(){
                     if (ammo > 0){
                         const newammo=ammo-1;
                         setAmmo(newammo);
-                        playShootSound();
+                        if (soundSelect.current==0){
+                            playShootSound2();
+                            soundSelect.current=1;
+                        }
+                        else {
+                            playShootSound();
+                            soundSelect.current=0;
+                        }
                         captureAndSendFrame(videoRef.current, sendMessage);
                         if (newammo <= 0){
                             reloadFunction();
