@@ -8,8 +8,8 @@ import {captureAndSendFrame} from "./core/image";
 
 import './App.css';
 
-const ASSET_PATH="./project/dist/assets";
-//const ASSET_PATH="./assets";
+// const ASSET_PATH="./project/dist/assets";
+const ASSET_PATH="./assets";
 const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 
 function App(){
@@ -35,10 +35,10 @@ function App(){
     const [inputLobbyId, setInputLobbyId] = useState('');
 
 
-    const fireRate=0.10;
+    const fireRate=80;
     // last firing time
     const lastFiringTime = useRef(0);
-
+    const [triggerPulled, setTriggerPulled] = useState(false);
     const audioRef = useRef(null);
     const shootSoundRef = useRef(null);
 
@@ -129,6 +129,14 @@ function App(){
     //     console.log(lastMessage)
     // // }, [isConnected, lastMessage]);
 
+    function shootPressed(){
+        setTriggerPulled(true);
+    }
+
+    function shootReleased(){
+        setTriggerPulled(false);
+    }
+
     // periodically send data to server
     useEffect(() => {
         const interval = setInterval(() => {
@@ -174,23 +182,33 @@ function App(){
     // audio manager
 
     // if fire is triggered handle logic
-    function handleFiring(){
-        if (Date.now() - lastFiringTime.current >= fireRate){
-            // sendImage();
-            if (ammo > 0){
-                playShootSound();
-                captureAndSendFrame(videoRef.current, sendMessage);
-                const newammo=ammo-1;
-                setAmmo(newammo);
-                if (newammo == 0){
-                    reloadFunction();
+    // function handleFiring(){
+    useEffect(() => {
+        let shoot_check_interval = setInterval(() => {
+            if (triggerPulled){
+                if (Date.now() - lastFiringTime.current >= fireRate){
+                    // sendImage();
+                    console.log("TIME: ", Date.now() - lastFiringTime.current);
+                    lastFiringTime.current = Date.now();
+                    if (ammo > 0){
+                        playShootSound();
+                        captureAndSendFrame(videoRef.current, sendMessage);
+                        const newammo=ammo-1;
+                        setAmmo(newammo);
+                        if (newammo == 0){
+                            reloadFunction();
+                        }
+                    }
+                    // play sound
                 }
             }
-            
-            lastFiringTime.current = Date.now();
-            // play sound
+        }, 10);
+
+        return () => {
+            clearInterval(shoot_check_interval);
         }
-    }
+
+    }, [triggerPulled, lastFiringTime, ammo]);
 
 
     // if reload is triggered handle logic
@@ -239,11 +257,11 @@ function App(){
             height: "20%",
             fontSize: "20px"
             }}
-            onMouseDown={handleFiring} 
-            // onMouseUp={handleButtonRelease} 
-            // onTouchStart={handleButtonPress}
-            // onTouchEnd={handleButtonRelease}
-            // onMouseLeave={handleButtonRelease}
+            onMouseDown={shootPressed} 
+            onMouseUp={shootReleased} 
+            onTouchStart={shootPressed}
+            onTouchEnd={shootReleased}
+            onMouseLeave={shootReleased}
             // disabled={!connected || !!cameraError}
         >
             FIRE
