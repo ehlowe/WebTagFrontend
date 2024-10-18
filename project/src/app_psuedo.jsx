@@ -261,18 +261,49 @@ function App(){
             width: "100%",
             height: "20%",
             fontSize: "20px",
-            backgroundColor: fireColor
+            backgroundColor: fireColor,
+            userSelect: "none",  // Prevent text selection
+            WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+            WebkitUserSelect: "none",  // Prevent selection on iOS
+            KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+            MozUserSelect: "none",  // Prevent selection on Firefox
+            msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+            WebkitTapHighlightColor: "rgba(0,0,0,0)",  // 
             }}
-            onMouseDown={shootPressed} 
-            onMouseUp={shootReleased} 
-            onTouchStart={shootPressed}
-            onTouchCancel ={shootReleased}
-            onTouchMove={(e) => {
-                if (e.touches.length === 0) {
-                  shootReleased();
-                }
-              }}
-            onMouseLeave={shootReleased}
+            // onMouseDown={shootPressed} 
+            // onMouseUp={shootReleased} 
+            // onTouchStart={shootPressed}
+            // onTouchCancel ={shootReleased}
+            // onTouchMove={(e) => {
+            //     if (e.touches.length === 0) {
+            //       shootReleased();
+            //     }
+            //   }}
+            // onMouseLeave={shootReleased}
+            onMouseDown={(e) => {
+                e.preventDefault();
+                shootPressed();
+            }}
+            onMouseUp={(e) => {
+                e.preventDefault();
+                shootReleased();
+            }}
+            onTouchStart={(e) => {
+                e.preventDefault();
+                shootPressed();
+            }}
+            onTouchEnd={(e) => {
+                e.preventDefault();
+                shootReleased();
+            }}
+            onTouchCancel={(e) => {
+                e.preventDefault();
+                shootReleased();
+            }}
+            onContextMenu={
+                (e) => e.preventDefault()
+            }
+            
             // disabled={!connected || !!cameraError}
         >
             FIRE
