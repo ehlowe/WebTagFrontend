@@ -61,7 +61,7 @@ function App(){
     useEffect(() => {
         audioRef.current = new Audio(ASSET_PATH + AUDIO_FILE);
         shootSoundRef.current = new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3");
-        shootSoundRef2.current = new Audio(ASSET_PATH + "/sounds/hit/acr.mp3");
+        shootSoundRef2.current = new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3");
     }, []);
         // const audioRef = useRef(new Audio(ASSET_PATH + AUDIO_FILE));
         // const shootSoundRef = useRef(new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3"));
@@ -382,7 +382,7 @@ function App(){
             placeholder="Enter lobby ID (optional)"
             style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' }}
             />
-            <button onClick={joinLobby} disabled={!!cameraError}>Connect to Lobby M4</button>
+            <button onClick={joinLobby} disabled={!!cameraError}>Connect to Lobby M5</button>
         </div>
         ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
