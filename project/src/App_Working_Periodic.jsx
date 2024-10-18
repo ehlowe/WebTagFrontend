@@ -1,8 +1,8 @@
 // const asset_path="project/dist/assets/";
 import React, { useState, useRef, useEffect } from 'react';
 
-const ASSET_PATH="./project/dist/assets";
-// const ASSET_PATH="./assets";
+// const ASSET_PATH="./project/dist/assets";
+const ASSET_PATH="./assets";
 const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 
 const App = () => {

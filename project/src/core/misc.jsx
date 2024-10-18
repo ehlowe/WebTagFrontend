@@ -37,9 +37,14 @@ async function setupCamera(videoRef) {
     const constraints = {
         video: {
           facingMode: 'environment',
-          height: { min: 960, max: 1500}
+          // height: { min: 960, max: 1500}
         }
       };
+
+    // if (videoRef.current.srcObject) {
+    //   videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    // }
+    // constraints.video.facingMode = constraints.video.facingMode === 'environment' ? 'user' : 'environment';
 
     try {
       let stream;

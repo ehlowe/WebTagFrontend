@@ -4,8 +4,13 @@ import { getHealthColor, drawCrosshair, setupCamera } from "./core/misc";
 import { handleHealthUpdate, reloadTimed } from "./core/logic";
 import useWebSocket from "./core/ws";
 
+import {captureAndSendFrame} from "./core/image";
+
 import './App.css';
 
+const ASSET_PATH="./project/dist/assets";
+// const ASSET_PATH="./assets";
+const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 
 function App(){
     // Player Health
@@ -28,6 +33,70 @@ function App(){
 
     // lobby info
     const [inputLobbyId, setInputLobbyId] = useState('');
+
+
+    const fireRate=0.10;
+    // last firing time
+    const lastFiringTime = useRef(0);
+
+    const audioRef = useRef(null);
+    const shootSoundRef = useRef(null);
+
+    useEffect(() => {
+        audioRef.current = new Audio(ASSET_PATH + AUDIO_FILE);
+        shootSoundRef.current = new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3");
+    }, []);
+        // const audioRef = useRef(new Audio(ASSET_PATH + AUDIO_FILE));
+        // const shootSoundRef = useRef(new Audio(ASSET_PATH + "/sounds/shoot/acr.mp3"));
+
+
+
+    const loadShootSound = () => {
+        console.log("LOADING SHOOT SOUND")
+        shootSoundRef.current.load();
+        shootSoundRef.current.play().then(() => {
+            shootSoundRef.current.pause();
+            shootSoundRef.current.currentTime = 0;
+        }).catch(e => {
+            console.error('Error loading audio:', e);
+        });
+    };
+
+    const playShootSound = () => {
+        if (shootSoundRef.current.paused) {
+            shootSoundRef.current.play().catch(e => {
+                console.error('Error playing audio:', e);
+            });
+        } else {
+            shootSoundRef.current.currentTime = 0;
+        }
+    };
+
+    const loadSound = () => {
+
+        console.log("LOADING SOUND")
+        audioRef.current.load();
+        audioRef.current.play().then(() => {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }).catch(e => {
+            console.error('Error loading audio:', e);
+        });
+
+        loadShootSound();
+    };
+
+    const playSound = () => {
+        if (audioRef.current.paused) {
+          audioRef.current.play().catch(e => {
+            console.error('Error playing audio:', e);
+          });
+        } else {
+          audioRef.current.currentTime = 0;
+        }
+    };
+
+
 
 
 
@@ -53,12 +122,12 @@ function App(){
 
 
     // manage connection with server
-    const { isConnected, lastMessage, connect, disconnect, sendMessage } = useWebSocket();
+    const { isConnected, lastMessage, connect, disconnect, sendMessage } = useWebSocket(window.serverurl);
     const [lobbyId, setLobbyId] = useState(null);
     // useEffect(() => {
     //     // console.log("IS CONNECTED: ", isConnected, "LM: ", lastMessage);
     //     console.log(lastMessage)
-    // }, [isConnected, lastMessage]);
+    // // }, [isConnected, lastMessage]);
 
     // periodically send data to server
     useEffect(() => {
@@ -73,32 +142,61 @@ function App(){
         }
     }, [isConnected]);
 
-
-    // audio manager
-
-    // if fire is triggered handle logic
-
-
-    // if reload is triggered handle logic
-    function reloadFunction(){
-        reloadTimed(ammo, setAmmo, mag_size);
+    // lobby connect
+    function joinLobby(){
+        connect(inputLobbyId);
     }
 
     // if health changes handle logic
     useEffect(() => {
-        setHealthColor(getHealthColor(health, 100));
-        // handleHealthUpdate
-        const {hit, death} = handleHealthUpdate(health, enemyHealth, prevEnemyHealth.current);
-        if (hit){
-            console.log("HIT")
-        } else if (death){
-            console.log("DEATH")
+        if (lastMessage == null){
+            return;
         }
-    }, [health]);
+        let health = lastMessage.health;
+        let enemyHealth = lastMessage.enemy_health;
+        if ((health !=null)&&(enemyHealth !=null)){
+            setHealth(health);
+            setEnemyHealth(enemyHealth);
 
-    // lobby connect
-    function joinLobby(){
-        connect(inputLobbyId);
+            setHealthColor(getHealthColor(health, 100));
+            // handleHealthUpdate
+            const {hit, death} = handleHealthUpdate(health, enemyHealth, prevEnemyHealth.current);
+            if (hit){
+                console.log("HIT")
+            } else if (death){
+                console.log("DEATH")
+            }
+        }
+    }, [lastMessage]);
+
+
+
+    // audio manager
+
+    // if fire is triggered handle logic
+    function handleFiring(){
+        if (Date.now() - lastFiringTime.current >= fireRate){
+            // sendImage();
+            if (ammo > 0){
+                playShootSound();
+                captureAndSendFrame(videoRef.current, sendMessage);
+                const newammo=ammo-1;
+                setAmmo(newammo);
+                if (newammo == 0){
+                    reloadFunction();
+                }
+            }
+            
+            lastFiringTime.current = Date.now();
+            // play sound
+        }
+    }
+
+
+    // if reload is triggered handle logic
+    function reloadFunction(){
+        playSound();
+        reloadTimed(ammo, setAmmo, mag_size);
     }
 
 
@@ -141,7 +239,7 @@ function App(){
             height: "20%",
             fontSize: "20px"
             }}
-            // onMouseDown={handleButtonPress} 
+            onMouseDown={handleFiring} 
             // onMouseUp={handleButtonRelease} 
             // onTouchStart={handleButtonPress}
             // onTouchEnd={handleButtonRelease}
@@ -167,6 +265,7 @@ function App(){
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
         )}
         {error && <p style={{ color: 'red' }}>{error}</p>}
+        <button onClick={loadSound}>Load Sound</button>
     </div>);
 }
 

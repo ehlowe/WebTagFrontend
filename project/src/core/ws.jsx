@@ -23,8 +23,16 @@ class WebSocketManager {
     }
   
     send(message) {
+    //   log if message len is greater than 1000
+
+      
+
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        this.ws.send(JSON.stringify(message));
+        if (message.id=='img'){
+            this.ws.send(message.data);
+        }else{
+            this.ws.send(JSON.stringify(message));
+        }
       } else {
         console.error('WebSocket is not connected');
         this.disconnect();
@@ -43,13 +51,13 @@ class WebSocketManager {
   
     // Additional methods for reconnection, etc.
   }
-function useWebSocket() {
+function useWebSocket(connection_url) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const wsManagerRef = useRef(null);
 
   useEffect(() => {
-    wsManagerRef.current = new WebSocketManager('https://hippo-funny-formerly.ngrok-free.app/');
+    wsManagerRef.current = new WebSocketManager(connection_url);//'https://hippo-funny-formerly.ngrok-free.app/');
     function handleOpen() {
         setIsConnected(true);
         const lobbyId=0;
