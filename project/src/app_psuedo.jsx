@@ -266,7 +266,7 @@ function App(){
             onMouseDown={shootPressed} 
             onMouseUp={shootReleased} 
             onTouchStart={shootPressed}
-            onTouchEnd={shootReleased}
+            onTouchCancel ={shootReleased}
             onMouseLeave={shootReleased}
             // disabled={!connected || !!cameraError}
         >
