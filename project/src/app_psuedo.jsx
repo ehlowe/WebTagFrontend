@@ -11,7 +11,8 @@ import './App.css';
 // const ASSET_PATH="./project/dist/assets";
 // const ASSET_PATH="./assets";
 const ASSET_PATH=window.assetpath
-const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
+// const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
+const AUDIO_FILE = "/sounds/reload/reload.mp3";
 
 function App(){
     // Player Health
@@ -40,6 +41,7 @@ function App(){
     // last firing time
     const lastFiringTime = useRef(0);
     const [triggerPulled, setTriggerPulled] = useState(false);
+    const [fireColor, setFireColor] = useState("gray");
     const audioRef = useRef(null);
     const shootSoundRef = useRef(null);
 
@@ -132,10 +134,12 @@ function App(){
 
     function shootPressed(){
         setTriggerPulled(true);
+        setFireColor("red");
     }
 
     function shootReleased(){
         setTriggerPulled(false);
+        setFireColor("gray");
     }
 
     // periodically send data to server
@@ -192,11 +196,11 @@ function App(){
                     console.log("TIME: ", Date.now() - lastFiringTime.current);
                     lastFiringTime.current = Date.now();
                     if (ammo > 0){
-                        playShootSound();
-                        captureAndSendFrame(videoRef.current, sendMessage);
                         const newammo=ammo-1;
                         setAmmo(newammo);
-                        if (newammo == 0){
+                        playShootSound();
+                        captureAndSendFrame(videoRef.current, sendMessage);
+                        if (newammo <= 0){
                             reloadFunction();
                         }
                     }
@@ -256,7 +260,8 @@ function App(){
             // height: "50px",
             width: "100%",
             height: "20%",
-            fontSize: "20px"
+            fontSize: "20px",
+            backgroundColor: fireColor
             }}
             onMouseDown={shootPressed} 
             onMouseUp={shootReleased} 
