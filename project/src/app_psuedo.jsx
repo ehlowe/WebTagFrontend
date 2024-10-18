@@ -14,6 +14,108 @@ const ASSET_PATH=window.assetpath
 // const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 const AUDIO_FILE = "/sounds/reload/reload.mp3";
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const useAudioManager = () => {
+    const audioContext = useRef(null);
+    const audioBuffers = useRef({});
+    const audioSources = useRef({});
+  
+    const initializeAudioContext = useCallback(() => {
+      if (!audioContext.current) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioContext.current = new AudioContext();
+      }
+    }, []);
+  
+    const loadSoundM = useCallback(async (name, url) => {
+      initializeAudioContext();
+  
+      try {
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioContext.current.decodeAudioData(arrayBuffer);
+        audioBuffers.current[name] = audioBuffer;
+      } catch (error) {
+        console.error('Error loading sound:', error);
+      }
+    }, [initializeAudioContext]);
+  
+    const playSoundM = useCallback((name) => {
+      if (!audioContext.current || !audioBuffers.current[name]) {
+        console.warn('AudioContext not initialized or sound not loaded.');
+        return;
+      }
+  
+      // If a source is already playing for this sound, stop it
+      if (audioSources.current[name]) {
+        audioSources.current[name].stop();
+      }
+  
+      const source = audioContext.current.createBufferSource();
+      source.buffer = audioBuffers.current[name];
+      source.connect(audioContext.current.destination);
+      
+      // Store the source so we can stop it later if needed
+      audioSources.current[name] = source;
+  
+      // Use the current time of the AudioContext to schedule sound immediately
+      source.start(audioContext.current.currentTime);
+    }, []);
+  
+    const resumeAudioContext = useCallback(() => {
+      initializeAudioContext();
+  
+      if (audioContext.current.state !== 'running') {
+        audioContext.current.resume().then(() => {
+          console.log('Audio context resumed');
+        }).catch((error) => {
+          console.error('Error resuming audio context:', error);
+        });
+      } else {
+        console.log('Audio context already running');
+      }
+    }, [initializeAudioContext]);
+  
+    useEffect(() => {
+      return () => {
+        Object.values(audioSources.current).forEach(source => {
+          if (source.stop) {
+            source.stop();
+          }
+        });
+        if (audioContext.current) {
+          audioContext.current.close();
+        }
+      };
+    }, []);
+  
+    return { loadSoundM, playSoundM, resumeAudioContext };
+  };
+
+
+
+
+
+
+
+
+
+
+
+
 function App(){
     // Player Health
     const [ health, setHealth ] = useState(100);
@@ -123,6 +225,8 @@ function App(){
 
         loadShootSound();
         loadShootSound2();
+        resumeAudioContext();
+        loadSoundM('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
     };
 
     const playSound = () => {
@@ -134,6 +238,9 @@ function App(){
           audioRef.current.currentTime = 0;
         }
     };
+
+
+    const { loadSoundM, playSoundM, resumeAudioContext } = useAudioManager();
 
 
 
@@ -234,14 +341,15 @@ function App(){
                     if (ammo > 0){
                         const newammo=ammo-1;
                         setAmmo(newammo);
-                        if (soundSelect.current==0){
-                            playShootSound2();
-                            soundSelect.current=1;
-                        }
-                        else {
-                            playShootSound();
-                            soundSelect.current=0;
-                        }
+                        playSoundM('shoot');
+                        // if (soundSelect.current==0){
+                        //     playShootSound2();
+                        //     soundSelect.current=1;
+                        // }
+                        // else {
+                        //     playShootSound();
+                        //     soundSelect.current=0;
+                        // }
                         captureAndSendFrame(videoRef.current, sendMessage);
                         if (newammo <= 0){
                             reloadFunction();
