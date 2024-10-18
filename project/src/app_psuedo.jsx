@@ -9,7 +9,8 @@ import {captureAndSendFrame} from "./core/image";
 import './App.css';
 
 // const ASSET_PATH="./project/dist/assets";
-const ASSET_PATH="./assets";
+// const ASSET_PATH="./assets";
+const ASSET_PATH=window.assetpath
 const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 
 function App(){
