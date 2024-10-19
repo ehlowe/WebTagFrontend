@@ -497,7 +497,7 @@ function App(){
                     backgroundColor: lobbyColor,
                 }}
                 onClick={joinLobby}
-                onTouchStart={joinLobby}
+                // onTouchStart={joinLobby}
                 disabled={!!cameraError}
             >
                 Connect to Lobby M5
