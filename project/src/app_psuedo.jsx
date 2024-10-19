@@ -394,7 +394,7 @@ function App(){
 
     // return the display of the app with all its components
     return(<div className="App" style={{ position: 'relative', width: '320px', height: '440px', backgroundColor: healthColor }}>
-        <p>LM: {String(lastMessage)}</p>
+        {/* <p>LM: {String(lastMessage)}</p> */}
         <button 
         style={{
             position: "absolute",
