@@ -23,21 +23,19 @@ class WebSocketManager {
     }
   
     send(message) {
-    //   log if message len is greater than 1000
-
-      
-
       if (this.ws && this.ws.readyState === WebSocket.OPEN) {
         if (message.id=='img'){
             this.ws.send(message.data);
         }else{
+            // console.log(message)
             this.ws.send(JSON.stringify(message));
         }
       } else {
         console.error('WebSocket is not connected');
-        this.disconnect();
+        // this.disconnect();
       }
     }
+
     disconnect() {
         if (this.ws) {
             this.ws.close();
@@ -54,7 +52,6 @@ class WebSocketManager {
 function useWebSocket(connection_url) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
-  const [errorLogger, setErrorLogger] = useState([]);
   const wsManagerRef = useRef(null);
 
   useEffect(() => {
@@ -84,6 +81,7 @@ function useWebSocket(connection_url) {
         const handleOpen = () => {
             setIsConnected(true);
             const message = lobbyId ? { lobby_id: parseInt(lobbyId) } : {};
+            console.log("OPENING WITH SEND")
             wsManagerRef.current.send(message);
         };
         wsManagerRef.current.connect(handleOpen);
@@ -100,7 +98,7 @@ function useWebSocket(connection_url) {
     wsManagerRef.current.send(message);
   }, []);
 
-  return { isConnected, lastMessage, connect, disconnect, sendMessage, errorLogger };
+  return { isConnected, lastMessage, connect, disconnect, sendMessage };
 }
 
 export default useWebSocket;
