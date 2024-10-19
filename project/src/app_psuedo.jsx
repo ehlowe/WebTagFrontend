@@ -137,6 +137,7 @@ function App(){
 
     // lobby info
     const [inputLobbyId, setInputLobbyId] = useState('');
+    const [lobbyColor, setLobbyColor] = useState('red');
 
 
     const fireRate=80;
@@ -300,6 +301,7 @@ function App(){
 
     // lobby connect
     function joinLobby(){
+        setLobbyColor('green')
         connect(inputLobbyId);
     }
 
@@ -490,7 +492,16 @@ function App(){
             placeholder="Enter lobby ID (optional)"
             style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' }}
             />
-            <button onClick={joinLobby} disabled={!!cameraError}>Connect to Lobby M5</button>
+            <button 
+                style={{
+                    backgroundColor: lobbyColor,
+                }}
+                onClick={joinLobby}
+                onTouchStart={joinLobby}
+                disabled={!!cameraError}
+            >
+                Connect to Lobby M5
+            </button>
         </div>
         ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
