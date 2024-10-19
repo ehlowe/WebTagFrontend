@@ -38,8 +38,8 @@ const sendImage = () => {
 async function captureAndSendFrame(video, sendMessage) {
     const draw_start = Date.now();
     // const video = videoRef.current;
-    // const zoomFactor=2.0
-    const zoomFactor=1.0
+    const zoomFactor=2.0
+    // const zoomFactor=1.0
   
     // Calculate dimensions for zoomed area
     const zoomedWidth = Math.floor(video.videoWidth / zoomFactor);
