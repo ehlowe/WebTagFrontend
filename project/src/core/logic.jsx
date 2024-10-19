@@ -30,18 +30,25 @@
 //     });
 //   };
 
-function handleHealthUpdate(health, enemyHealth, prevEnemyHealth) {
+function handleHealthUpdate(health, prevHealth, enemyHealth, prevEnemyHealth) {
+
+  const data={}
   if (prevEnemyHealth.current > enemyHealth){
     if (enemyHealth <=0 ){
       // death
-      return {death: true};
+      data.kill=true;
     }else{
       // hit
-      return {hit: true};
+      data.hit=true;
     }
   }
 
-  return {};
+  if ((health <= 0) && (prevHealth.current > health)){
+    data.death=true;
+  }
+  // console.log("DATA: ", data);
+
+  return data;
 }
 
 

@@ -40,7 +40,7 @@ const useAudioManager = () => {
       }
     }, []);
   
-    const loadSoundM = useCallback(async (name, url) => {
+    const loadSound = useCallback(async (name, url) => {
       initializeAudioContext();
   
       try {
@@ -53,7 +53,7 @@ const useAudioManager = () => {
       }
     }, [initializeAudioContext]);
   
-    const playSoundM = useCallback((name) => {
+    const playSound = useCallback((name) => {
       if (!audioContext.current || !audioBuffers.current[name]) {
         console.warn('AudioContext not initialized or sound not loaded.');
         return;
@@ -102,7 +102,7 @@ const useAudioManager = () => {
       };
     }, []);
   
-    return { loadSoundM, playSoundM, resumeAudioContext };
+    return { loadSound, playSound, resumeAudioContext };
   };
 
 
@@ -119,6 +119,7 @@ const useAudioManager = () => {
 function App(){
     // Player Health
     const [ health, setHealth ] = useState(100);
+    const prevHealth = useRef(100);
     const [ healthColor, setHealthColor ] = useState(null);
 
     // Player Ammo
@@ -171,77 +172,17 @@ function App(){
 
 
 
-    const loadShootSound = () => {
-        console.log("LOADING SHOOT SOUND")
-        shootSoundRef.current.load();
-        shootSoundRef.current.play().then(() => {
-            shootSoundRef.current.pause();
-            shootSoundRef.current.currentTime = 0;
-        }).catch(e => {
-            console.error('Error loading audio:', e);
-        });
-    };
 
-    const loadShootSound2 = () => {
-        console.log("LOADING SHOOT SOUND 2")
-        shootSoundRef2.current.load();
-        shootSoundRef2.current.play().then(() => {
-            shootSoundRef2.current.pause();
-            shootSoundRef2.current.currentTime = 0;
-        }).catch(e => {
-            console.error('Error loading audio:', e);
-        });
-    };
 
-    const playShootSound2 = () => {
-        if (shootSoundRef2.current.paused) {
-            shootSoundRef2.current.play().catch(e => {
-                console.error('Error playing audio:', e);
-            });
-        } else {
-            shootSoundRef2.current.currentTime = 0;
-        }
-    };
-
-    const playShootSound = () => {
-        if (shootSoundRef.current.paused) {
-            shootSoundRef.current.play().catch(e => {
-                console.error('Error playing audio:', e);
-            });
-        } else {
-            shootSoundRef.current.currentTime = 0;
-        }
-    };
-
-    const loadSound = () => {
-
-        console.log("LOADING SOUND")
-        audioRef.current.load();
-        audioRef.current.play().then(() => {
-            audioRef.current.pause();
-            audioRef.current.currentTime = 0;
-        }).catch(e => {
-            console.error('Error loading audio:', e);
-        });
-
-        loadShootSound();
-        loadShootSound2();
+    const { loadSound, playSound, resumeAudioContext } = useAudioManager();
+    const initSound = () => {
         resumeAudioContext();
-        loadSoundM('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
+        loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
+        loadSound('reload', ASSET_PATH+'/sounds/reload/reload.mp3');
+        loadSound('hit', ASSET_PATH+'/sounds/hit/hitfast.mp3');
+        loadSound('kill', ASSET_PATH+'/sounds/kill/kill.mp3');
+        loadSound('dead', ASSET_PATH+'/sounds/dead/aDead.mp3');
     };
-
-    const playSound = () => {
-        if (audioRef.current.paused) {
-          audioRef.current.play().catch(e => {
-            console.error('Error playing audio:', e);
-          });
-        } else {
-          audioRef.current.currentTime = 0;
-        }
-    };
-
-
-    const { loadSoundM, playSoundM, resumeAudioContext } = useAudioManager();
 
 
 
@@ -318,14 +259,26 @@ function App(){
 
             setHealthColor(getHealthColor(health, 100));
             // handleHealthUpdate
-            const {hit, death} = handleHealthUpdate(health, enemyHealth, prevEnemyHealth.current);
-            if (hit){
-                console.log("HIT")
-            } else if (death){
-                console.log("DEATH")
+            const hithealthdata = handleHealthUpdate(health, prevHealth, enemyHealth, prevEnemyHealth);
+
+            // console.log()
+            if (hithealthdata.hit){
+                console.log("HIT");
+                playSound('hit');
+            }
+            if (hithealthdata.kill==true){
+                console.log("KILL");
+                playSound('kill');
+            }
+            if (hithealthdata.death){
+                playSound('dead');
+                setAmmo(mag_size);
             }
         }
-    }, [lastMessage]);
+        prevEnemyHealth.current = enemyHealth;
+        prevHealth.current = health;
+
+    }, [lastMessage, prevHealth, prevEnemyHealth]);
 
 
 
@@ -343,21 +296,13 @@ function App(){
                     if (ammo > 0){
                         const newammo=ammo-1;
                         setAmmo(newammo);
-                        playSoundM('shoot');
-                        // if (soundSelect.current==0){
-                        //     playShootSound2();
-                        //     soundSelect.current=1;
-                        // }
-                        // else {
-                        //     playShootSound();
-                        //     soundSelect.current=0;
-                        // }
+                        playSound('shoot');
+
                         captureAndSendFrame(videoRef.current, sendMessage);
                         if (newammo <= 0){
                             reloadFunction();
                         }
                     }
-                    // play sound
                 }
             }
         }, 10);
@@ -387,14 +332,13 @@ function App(){
 
     // if reload is triggered handle logic
     function reloadFunction(){
-        playSound();
+        playSound('reload');
         reloadTimed(ammo, setAmmo, mag_size);
     }
 
 
     // return the display of the app with all its components
     return(<div className="App" style={{ position: 'relative', width: '320px', height: '440px', backgroundColor: healthColor }}>
-        {/* <p>LM: {String(lastMessage)}</p> */}
         <button 
         style={{
             position: "absolute",
@@ -508,7 +452,7 @@ function App(){
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
         )}
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button onClick={loadSound}>Load Sound</button>
+        <button onClick={initSound}>Load Sound</button>
     </div>);
 }
 
