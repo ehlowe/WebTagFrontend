@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.mp3'],
-  base: '/WebTagFrontend/',
+  // base: '/WebTagFrontend/',
   build: {
     outDir: '../'
   }
