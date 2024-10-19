@@ -1,34 +1,53 @@
 
+import { useEffect } from 'react';
+import { getHealthColor } from "./misc";
 
-// const handleHealthUpdate = (health, enemyHealth) => {
-//     setCurrentHealth((currentHealth) => {
-//       if (health <= 0 && currentHealth > 0) {
-//         playSound('dead');
-//         setAmmo(mag_size);
-//       }
-//       return health;
-//     });
 
-//     setEnemyHealth((prevEnemyHealth) => {
-//       if (health <= 0) {
-//         setHealthColor('purple');
-//       } else {
-//         setHealthColor(getHealthColor(health, 100));
-//       }
-//       if (enemyHealth < prevEnemyHealth) {
-//         console.log("enemy hit", enemyHealth, prevEnemyHealth);
-//         console.log("TIME TO HIT:", Date.now() - lastSentTimeRef.current);
-//         setLatencyNum(Date.now() - lastSentTimeRef.current);
+function useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount){
+  // if health changes handle logic
+  useEffect(() => {
+    if (lastMessage == null){
+        return;
+    }
+    let health = lastMessage.health;
+    let enemyHealth = lastMessage.enemy_health;
+    let lobbyCount = lastMessage.lobby_count;
+    let lobbyId = lastMessage.lobby_id;
+    if (lobbyCount != null){
+      setLobbyCount(lobbyCount);
+    }
+    if (lobbyId != null){
+      setLobbyId(lobbyId);
+    }
 
-//         if (enemyHealth > 0) {
-//           playSound('hit');
-//         } else if (enemyHealth === 0) {
-//           playSound('kill');
-//         }
-//       }
-//       return enemyHealth;
-//     });
-//   };
+    if ((health !=null)&&(enemyHealth !=null)){
+        setHealth(health);
+        setEnemyHealth(enemyHealth);
+
+        setHealthColor(getHealthColor(health, 100));
+        // handleHealthUpdate
+        const hithealthdata = handleHealthUpdate(health, prevHealth, enemyHealth, prevEnemyHealth);
+
+        // console.log()
+        if (hithealthdata.hit){
+            console.log("HIT");
+            playSound('hit');
+        }
+        if (hithealthdata.kill==true){
+            console.log("KILL");
+            playSound('kill');
+        }
+        if (hithealthdata.death){
+            playSound('dead');
+            setAmmo(mag_size);
+        }
+    }
+    prevEnemyHealth.current = enemyHealth;
+    prevHealth.current = health;
+
+  }, [lastMessage, prevHealth, prevEnemyHealth]);
+
+}
 
 function handleHealthUpdate(health, prevHealth, enemyHealth, prevEnemyHealth) {
 
@@ -68,4 +87,4 @@ function reloadTimed(ammo, setAmmo, mag_size){
   };
 }
 
-export { handleHealthUpdate, reloadTimed };
+export { useHealthEffect, handleHealthUpdate, reloadTimed };

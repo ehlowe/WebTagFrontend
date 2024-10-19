@@ -37,6 +37,7 @@ async function setupCamera(videoRef) {
     const constraints = {
         video: {
           facingMode: 'environment',
+          // deviceId
           // height: { min: 960, max: 1500}
         }
       };
