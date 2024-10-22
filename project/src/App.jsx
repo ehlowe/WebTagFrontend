@@ -26,6 +26,7 @@ function App(){
     // Player Ammo
     const [ ammo, setAmmo ] = useState(33);
     const [ mag_size, setMagSize ] = useState(34);
+    const [ inReload, setInReload ] = useState(false);
 
     // Firing Logic
     const fireRate=80;
@@ -33,6 +34,10 @@ function App(){
     const [triggerPulled, setTriggerPulled] = useState(false);
     const [isPressed, setIsPressed] = useState(false);
     const [fireColor, setFireColor] = useState("gray");
+    const [zoomedMode, setZoomedMode] = useState(false);
+    const [zoomedRef, setZoomedRef] = useState(null);
+    const zoomedCanvas = useRef(null);
+    const [selectedCamera, setSelectedCamera] = useState(null);
 
     // Enemy Health
     const [ enemyHealth, setEnemyHealth ] = useState(100);
@@ -54,23 +59,88 @@ function App(){
     // Setup camera and crosshair
     const videoRef = useRef(null);
     const crosshairRef = useRef(null);
+    const [cameras, setCameras] = useState([]);
+    const getCameras = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(device => device.kind === 'videoinput');
+        console.log('Cameras:', videoDevices);
+        setCameras(videoDevices);
+        
+        // Automatically select the 3x zoom camera if it's the third rear camera
+        if (videoDevices.length >= 3) {
+          setSelectedCamera(videoDevices[2].deviceId);
+        } else {
+          setSelectedCamera(videoDevices[0].deviceId);
+        }
+      } catch (err) {
+        console.error('Error getting cameras:', err);
+      }
+    };
+    // get the cameras to see the options
     useEffect(() => {
-        crosshairRef.current = drawCrosshair(crosshairRef.current);
-        setupCamera(videoRef);
+        getCameras();
     }, []);
+    useEffect(() => {
+      if (cameras.length != 0){
+        const sel_id=cameras[0].deviceId;
+        crosshairRef.current = drawCrosshair(crosshairRef.current);
+        setupCamera(videoRef, sel_id);
+      }
+    }, [cameras]);
 
     // manage connection with server
     const { isConnected, lastMessage, connect, disconnect, sendMessage } = useWebSocket(window.serverurl);
 
+    // periodically send data to server
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (isConnected) {
+                sendMessage({ data: "1234567891011121314151617181920" });
+            }
+        }, 50);
+
+        return () => {
+            clearInterval(interval);
+        }
+    }, [isConnected]);
+
+    // lobby connect
+    function joinLobby(){
+        initSound();
+        setLobbyColor('green')
+        connect(inputLobbyId);
+    }
+
     // audio manager
     const { loadSound, playSound, resumeAudioContext } = useAudioManager();
     const initSound = () => {
+        // const shoot_path='/sounds/shoot/bhew.mp3';
+        // const shoot_path='/sounds/shoot/vts5.mp3';
+        // const shoot_path='/sounds/shoot/Thump.mp3';
+        // const shoot_path='/sounds/shoot/Thump2.mp3';
+        const shoot_path='/sounds/shoot/VTshoot_L.mp3';
+
+        // const shoot_path='/sounds/shoot/Thump_L.mp3';
+        // const shoot_path='/sounds/hit/VThit.mp3';
+        // const shoot_path='/sounds/kill/VTkill.mp3';
+
+
+
+
         resumeAudioContext();
-        loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
-        loadSound('reload', ASSET_PATH+'/sounds/reload/reload.mp3');
-        loadSound('hit', ASSET_PATH+'/sounds/hit/hitfast.mp3');
-        loadSound('kill', ASSET_PATH+'/sounds/kill/kill.mp3');
-        loadSound('dead', ASSET_PATH+'/sounds/dead/aDead.mp3');
+        // loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
+        loadSound('shoot', ASSET_PATH+shoot_path);
+        loadSound('shoot2', ASSET_PATH+shoot_path);
+        // loadSound('reload', ASSET_PATH+'/sounds/reload/reload.mp3');
+        loadSound('reload', ASSET_PATH+'/sounds/reload/VTreload.mp3');
+        // loadSound('reload', ASSET_PATH+'/sounds/kill/VTkill.mp3');
+        // loadSound('reload', ASSET_PATH+'/sounds/dead/VTdeath.mp3');
+
+        // loadSound('hit', ASSET_PATH+'/sounds/hit/hitfast.mp3');
+        loadSound('hit', ASSET_PATH+'/sounds/hit/VThit.mp3');
+        loadSound('kill', ASSET_PATH+'/sounds/kill/VTkill.mp3');
+        loadSound('dead', ASSET_PATH+'/sounds/dead/VTdeath.mp3');
     };
 
 
@@ -105,6 +175,7 @@ function App(){
         document.removeEventListener('touchend', handleGlobalMouseUp);
       };
     }, [isPressed, handlePressEnd]);
+    const shoot_audio_ref = useRef(false);
     useEffect(() => {
       let shoot_check_interval = setInterval(() => {
           if (triggerPulled){
@@ -115,7 +186,14 @@ function App(){
                   if (ammo > 0){
                       const newammo=ammo-1;
                       setAmmo(newammo);
-                      playSound('shoot');
+                      // playSound('shoot');
+                      if (shoot_audio_ref.current){
+                        playSound('shoot');
+                        shoot_audio_ref.current=false;
+                      }else{
+                        playSound('shoot2');
+                        shoot_audio_ref.current=true;
+                      }
 
                       captureAndSendFrame(videoRef.current, sendMessage);
                       if (newammo <= 0){
@@ -125,7 +203,6 @@ function App(){
               }
           }
       }, 10);
-
       return () => {
           clearInterval(shoot_check_interval);
       }
@@ -134,104 +211,196 @@ function App(){
 
 
 
+    
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // periodically send data to server
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (isConnected) {
-                sendMessage({ data: "1234567891011121314151617181920" });
-            }
-        }, 50);
-
-        return () => {
-            clearInterval(interval);
-        }
-    }, [isConnected]);
-
-    // lobby connect
-    function joinLobby(){
-        setLobbyColor('green')
-        connect(inputLobbyId);
+    function zoom_img(video, targetCanvas) {
+      const zoomFactor = 5.0;
+      
+      const zoomedWidth = Math.floor(video.videoWidth / zoomFactor);
+      const zoomedHeight = Math.floor(video.videoHeight / zoomFactor);
+      
+      targetCanvas.width = zoomedWidth;
+      targetCanvas.height = zoomedHeight;
+      const ctx = targetCanvas.getContext('2d');
+      
+      const sx = Math.floor((video.videoWidth - zoomedWidth) / 2);
+      const sy = Math.floor((video.videoHeight - zoomedHeight) / 2);
+      
+      ctx.drawImage(
+        video,
+        sx, sy, zoomedWidth, zoomedHeight,
+        0, 0, zoomedWidth, zoomedHeight
+      );
     }
+    // everytime videoRef changes run this function
+    useEffect(() => {
+      // if ((videoRef.current) && (zoomedMode)){
+      let interval = setInterval(() => {
+        if (zoomedMode){
+          console.log("ZOOMING");
+          zoom_img(videoRef.current, zoomedCanvas.current);
+        
+        }
+      }
+      , 30);
+
+      return () => {
+        clearInterval(interval);
+      }
+    }, [videoRef]);
+
+
+
+
+
+
 
     // handle health and surrounding logic
     useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount);
 
-    
-
     // if reload is triggered handle logic
     function reloadFunction(){
-        playSound('reload');
-        reloadTimed(ammo, setAmmo, mag_size);
+        if ( !inReload && ammo < mag_size){
+          playSound('reload');
+          reloadTimed(ammo, setAmmo, mag_size, setInReload);
+        }
     }
 
+    // // if the screen is turned off close everything and stop camera
+    // useEffect(() => {
+    //   const handleVisibilityChange = () => {
+    //     if (document.hidden) {
+    //       // Stop all tracks in your video/audio stream
+    //       if (yourStreamRef.current) {
+    //         yourStreamRef.current.getTracks().forEach(track => track.stop());
+    //       }
+    //     }
+    //   };
+    
+    //   document.addEventListener("visibilitychange", handleVisibilityChange);
+    
+    //   // Cleanup
+    //   return () => {
+    //     document.removeEventListener("visibilitychange", handleVisibilityChange);
+    //   };
+    // }, []);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    const prevVisibility = useRef(document.visibilityState);
+    function handleVisibilityChange() {
+      console.log(document.visibilityState)
+
+      // if the state is hiiden navigate to the /goodbye page
+      if (document.visibilityState === 'hidden') {
+        window.location.href = "/goodbye";
+      }
+
+
+
+      // console.log(document.visibilityState);
+      // if (document.visibilityState === prevVisibility.current) {
+      //   return;
+      // }
+
+      // if (document.visibilityState !='visible'){
+      //   console.log("STOPPING CAMERA");
+      //   stopCam();
+      // } else if (document.visibilityState === 'visible') {
+      //   // getCameras();
+      //   console.log('Page visible - refreshing', document.hidden);
+      //   setupCamera(videoRef, cameras[0].deviceId);
+      // }
+    } 
+    function stopCam(){
+      if (videoRef.current.srcObject) {
+        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      }
+    }
 
     // return the display of the app with all its components
     return(<div className="App" style={{ position: 'relative', width: '320px', height: '440px', backgroundColor: healthColor }}>
         <button 
         style={{
-            position: "absolute",
+            // position: "absolute",
             // height: "50px",
+            position: 'relative',
+            padding: 0, margin: 0,
             width: "100%",
             height: "10%",
             fontSize: "20px",
-            zIndex: 1
+            zIndex: 1,
+            top: '5%',
         }}
         onMouseDown={reloadFunction}
         onTouchStart={reloadFunction}
-        // disabled={!connected || !!cameraError}
         >
         RELOAD {ammo}/{mag_size}
         </button>
-        <video ref={videoRef} autoPlay playsInline style={{ width: '320px', height: '440px' }} />
-        <canvas 
-        ref={crosshairRef} 
+        <div style={{height: 'auto' , position: 'relative', top: '0%', height: '80%', padding: 0, margin: 0}}>
+          <video ref={videoRef} autoPlay playsInline 
+          style={{ 
+            width: "100%",
+            width: '100%', 
+            height: '100%' , 
+          }}
+          />
+          <canvas 
+            ref={crosshairRef} 
+            style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: '100%',
+                pointerEvents: 'none',
+                zIndex: 1000
+            }} 
+          />
+        </div>
+
+
+        {/* <canvas ref={zoomedCanvas} 
         width="320" 
         height="440" 
+        zIndex="10000"
         style={{
             position: 'absolute',
             top: 0,
             left: 0,
             pointerEvents: 'none',
-        }} 
-        />
+        }} /> */}
+
+        {/* {
+          zoomedMode ?
+          <canvas ref={zoomedCanvas} autoPlay playsInline style={{ width: '320px', height: '440px' }}/>
+          :<video ref={videoRef} autoPlay playsInline style={{ width: '320px', height: '440px' }} />
+
+        } */}
 
         <div>
-        <button 
-            style={{
-            // height: "50px",
-            width: "100%",
-            height: "20%",
-            fontSize: "20px",
-            backgroundColor: fireColor,
-            userSelect: "none",  // Prevent text selection
-            WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
-            WebkitUserSelect: "none",  // Prevent selection on iOS
-            KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
-            MozUserSelect: "none",  // Prevent selection on Firefox
-            msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
-            WebkitTapHighlightColor: "rgba(0,0,0,0)",  // 
-            }}
-            onMouseDown={handlePressStart}
-            onTouchStart={handlePressStart}
-        >
-            FIRE
-        </button>
-        <p>Health: {health}, Enemy Health: {enemyHealth}<br></br> Hit Latency: {latencyNum}, Lobby {lobbyId}:  {lobbyCount}/2 players</p>
+          <button 
+              style={{
+              // height: "50px",
+              width: "100%",
+              height: "20%",
+              fontSize: "20px",
+              position: "relative",
+              top: '100%',
+              backgroundColor: fireColor,
+              userSelect: "none",  // Prevent text selection
+              WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+              WebkitUserSelect: "none",  // Prevent selection on iOS
+              KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+              MozUserSelect: "none",  // Prevent selection on Firefox
+              msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+              WebkitTapHighlightColor: "rgba(0,0,0,0)",  // 
+              }}
+              onMouseDown={handlePressStart}
+              onTouchStart={handlePressStart}
+          >
+              FIRE
+          </button>
+          <p>Health: {health}, Enemy Health: {enemyHealth}<br></br> Hit Latency: {latencyNum}, Lobby {lobbyId}:  {lobbyCount}/2 players</p>
         </div>
         {!isConnected ? (
         <div>
@@ -250,14 +419,14 @@ function App(){
                 // onTouchStart={joinLobby}
                 disabled={!!cameraError}
             >
-                Connect to Lobby M5
+                Connect to Lobby
             </button>
         </div>
         ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
         )}
         {error && <p style={{ color: 'red' }}>{error}</p>}
-        <button onClick={initSound}>Load Sound</button>
+        {/* <button onClick={initSound}>Load Sound</button> */}
     </div>);
 }
 

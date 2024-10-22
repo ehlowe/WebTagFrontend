@@ -15,32 +15,46 @@ function drawCrosshair(canvas) {
     if (canvas) {
         const context = canvas.getContext('2d');
         const { width, height } = canvas;
+        console.log("WIDTH HEIGHT: ", width, height);
 
         context.clearRect(0, 0, width, height);
         context.strokeStyle = 'red';
-        context.lineWidth = 2;
-        const crosshairSize = 20;
+        context.lineWidth = 1;
+        const crosshairSizeW = 20;
+        const crosshairSizeH = crosshairSizeW*height/width
 
         context.beginPath();
-        context.moveTo((width/2-crosshairSize), (height / 2));
-        context.lineTo((width/2+crosshairSize), height / 2);
+        context.moveTo((width/2-crosshairSizeW), (height / 2));
+        context.lineTo((width/2+crosshairSizeW), height / 2);
         context.stroke();
 
+        // context.lineWidth = context.lineWidth*width/height
         context.beginPath();
-        context.moveTo(width / 2, (height/2-crosshairSize));
-        context.lineTo(width / 2, (height/2+crosshairSize));
+        context.moveTo(width / 2, (height/2-crosshairSizeH));
+        context.lineTo(width / 2, (height/2+crosshairSizeH));
         context.stroke();
     }
 };
 
-async function setupCamera(videoRef) {
+async function setupCamera(videoRef, sel_id) {
+    // const constraints = {
+    //     video: {
+    //       facingMode: 'environment',
+    //       deviceId: sel_id,
+    //       // height: { min: 960, max: 1500}
+    //     }
+    //   };
+
     const constraints = {
-        video: {
-          facingMode: 'environment',
-          // deviceId
-          // height: { min: 960, max: 1500}
-        }
-      };
+      video: {
+        facingMode: 'environment',
+        // deviceId: sel_id,
+        height: { min: 1000, max: 2500, ideal: 2000 },
+
+        // set aspect ratio to 1:1
+        aspectRatio: { ideal: 1 }
+      }
+    };
 
     // if (videoRef.current.srcObject) {
     //   videoRef.current.srcObject.getTracks().forEach(track => track.stop());

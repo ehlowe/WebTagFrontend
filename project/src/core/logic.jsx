@@ -71,19 +71,22 @@ function handleHealthUpdate(health, prevHealth, enemyHealth, prevEnemyHealth) {
 }
 
 
-function reloadTimed(ammo, setAmmo, mag_size){
+function reloadTimed(ammo, setAmmo, mag_size, setInReload){
 
   if (ammo === mag_size){
     return;
   }
-  let reload_time=3.0;
+  let reload_time=3.5;
   setAmmo(0);
+  setInReload(true);
   const interval = setTimeout(() => {
     setAmmo(mag_size);
+    setInReload(false);
   }, reload_time*1000);
 
   return () => {
     clearTimeout(interval);
+    setInReload(false);
   };
 }
 

@@ -2,7 +2,7 @@
 async function captureAndSendFrame(video, sendMessage) {
     const draw_start = Date.now();
     // const video = videoRef.current;
-    const zoomFactor=2.0
+    const zoomFactor=5.0
     // const zoomFactor=1.0
   
     // Calculate dimensions for zoomed area
