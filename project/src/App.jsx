@@ -4,7 +4,10 @@ import { getHealthColor, drawCrosshair, setupCamera } from "./core/misc";
 import { useHealthEffect, handleHealthUpdate, reloadTimed } from "./core/logic";
 import { useAudioManager } from "./core/audio";
 import useWebSocket from "./core/websocket";
+
 import CameraSelector from "./core/camera_switch_popup";
+import CreditsPopup from "./core/sfx_credits";
+
 
 import {captureAndSendFrame} from "./core/image";
 
@@ -348,7 +351,7 @@ function App(){
     }
 
     // return the display of the app with all its components
-    return(<div className="App" style={{ position: 'relative', width: '320px', height: '440px', backgroundColor: healthColor }}>
+    return(<div className="App" style={{ position: 'relative',left: '5%', justifyContent: 'center' ,width: '90%', height: '440px', backgroundColor: healthColor }}>
         <button 
         style={{
             // position: "absolute",
@@ -502,6 +505,10 @@ function App(){
         /> */}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {/* <button onClick={initSound}>Load Sound</button> */}
+        {/* <div style={{position: "absolute", bottom: '-200px', left: 0}}>
+          <button style={{padding: '0px'}}>SFX<br></br>Credits</button>
+        </div> */}
+        <CreditsPopup />
         
     </div>);
 }
