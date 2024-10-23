@@ -92,6 +92,7 @@ function useWebSocket(connection_url) {
   const disconnect = useCallback(() => {
     if (wsManagerRef.current) {
         wsManagerRef.current.disconnect();
+        setIsConnected(false);
     }
   }, []);
 

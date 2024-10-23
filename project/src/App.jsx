@@ -4,6 +4,7 @@ import { getHealthColor, drawCrosshair, setupCamera } from "./core/misc";
 import { useHealthEffect, handleHealthUpdate, reloadTimed } from "./core/logic";
 import { useAudioManager } from "./core/audio";
 import useWebSocket from "./core/websocket";
+import CameraSelector from "./core/camera_switch_popup";
 
 import {captureAndSendFrame} from "./core/image";
 
@@ -18,6 +19,10 @@ const AUDIO_FILE = "/sounds/reload/reload.mp3";
 
 
 function App(){
+    // Player Stats
+    const [k, setK]=useState(0);
+    const [d, setD]=useState(0);
+
     // Player Health
     const [ health, setHealth ] = useState(100);
     const prevHealth = useRef(100);
@@ -38,6 +43,7 @@ function App(){
     const [zoomedRef, setZoomedRef] = useState(null);
     const zoomedCanvas = useRef(null);
     const [selectedCamera, setSelectedCamera] = useState(null);
+    const cameraIndex = useRef(null);
 
     // Enemy Health
     const [ enemyHealth, setEnemyHealth ] = useState(100);
@@ -85,7 +91,7 @@ function App(){
       if (cameras.length != 0){
         const sel_id=cameras[0].deviceId;
         crosshairRef.current = drawCrosshair(crosshairRef.current);
-        setupCamera(videoRef, sel_id);
+        setupCamera(videoRef, null);
       }
     }, [cameras]);
 
@@ -111,6 +117,16 @@ function App(){
         setLobbyColor('green')
         connect(inputLobbyId);
     }
+
+    useEffect(() => {
+        if (isConnected){
+            setLobbyColor('green');
+        }else{
+            setLobbyColor('red');
+            setLobbyId(null);
+            setLobbyCount(null);
+        }
+    }, [isConnected]);
 
     // audio manager
     const { loadSound, playSound, resumeAudioContext } = useAudioManager();
@@ -257,7 +273,7 @@ function App(){
 
 
     // handle health and surrounding logic
-    useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount);
+    useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD);
 
     // if reload is triggered handle logic
     function reloadFunction(){
@@ -317,6 +333,20 @@ function App(){
       }
     }
 
+    function switchCamera(){
+      const num_cams=cameras.length;
+      stopCam();
+      if (cameraIndex.current == null){
+        cameraIndex.current=0;
+      }else if (cameraIndex.current < num_cams-1){
+        cameraIndex.current+=1;
+      }else{
+        cameraIndex.current=0;
+      }
+      console.log(cameraIndex.current);
+      setupCamera(videoRef, cameras[cameraIndex.current].deviceId);      
+    }
+
     // return the display of the app with all its components
     return(<div className="App" style={{ position: 'relative', width: '320px', height: '440px', backgroundColor: healthColor }}>
         <button 
@@ -337,6 +367,10 @@ function App(){
         RELOAD {ammo}/{mag_size}
         </button>
         <div style={{height: 'auto' , position: 'relative', top: '0%', height: '80%', padding: 0, margin: 0}}>
+
+          <div style={{position: 'absolute', padding: "5px", right: '0px', color: 'black'}}>
+            <h2>K: {k}, D: {d}</h2>
+          </div>
           <video ref={videoRef} autoPlay playsInline 
           style={{ 
             width: "100%",
@@ -356,6 +390,31 @@ function App(){
                 zIndex: 1000
             }} 
           />
+          {/* If not connected to a lobby display a banner telling user to connect to a lobby */}
+          {!isConnected && (
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              // backgroundColor: 'rgba(45, 45, 45, 0.5)',
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 2000
+            }}>
+              <div style={{
+                backgroundColor: 'white',
+                padding: '1rem',
+                borderRadius: '0.5rem',
+                textAlign: 'center'
+              }}>
+                <h2 style={{ margin: 0, marginBottom: '1rem', zIndex: 1000, color: "black" }}>Connect to Lobby with button below</h2>
+                <p style={{ margin: 0 , zIndex: 1000, color: "black" }}>This enables audio and connects you to the server, join a friend's lobby number to play with them</p>
+              </div>
+            </div>
+          )}
         </div>
 
 
@@ -400,7 +459,7 @@ function App(){
           >
               FIRE
           </button>
-          <p>Health: {health}, Enemy Health: {enemyHealth}<br></br> Hit Latency: {latencyNum}, Lobby {lobbyId}:  {lobbyCount}/2 players</p>
+          <p>Health: {health}, Enemy Health: {enemyHealth}<br></br> Hit Latency: {latencyNum}, Lobby {lobbyId}, {lobbyCount}/2 players</p>
         </div>
         {!isConnected ? (
         <div>
@@ -425,8 +484,25 @@ function App(){
         ) : (
         <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
         )}
+        <CameraSelector 
+          cameras={cameras} 
+          onCameraSelect={(index) => {
+            cameraIndex.current = index;
+            stopCam();
+            setupCamera(videoRef, cameras[index].deviceId);
+          }} 
+        />
+        {/* <button onClick={switchCamera}>Wrong Camera? Switch</button> */}
+        {/* <CameraSelector
+          cameras={cameras}
+          cameraIndex={cameraIndex}
+          stopCam={stopCam}
+          setupCamera={setupCamera}
+          videoRef={videoRef}
+        /> */}
         {error && <p style={{ color: 'red' }}>{error}</p>}
         {/* <button onClick={initSound}>Load Sound</button> */}
+        
     </div>);
 }
 

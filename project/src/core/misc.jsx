@@ -44,19 +44,35 @@ async function setupCamera(videoRef, sel_id) {
     //       // height: { min: 960, max: 1500}
     //     }
     //   };
+    let constraints;
+    if (sel_id==null) {
+      constraints = {
+        video: {
+          facingMode: 'environment',
+          // deviceId: sel_id,
+          // height: { min: 1000, max: 2500, ideal: 2000 },
+          // height: { min: 900, max: 1600, ideal: 1000 },
+          height: { min: 800, max: 2200, ideal: 1000 },
 
-    const constraints = {
-      video: {
-        facingMode: 'environment',
-        // deviceId: sel_id,
-        // height: { min: 1000, max: 2500, ideal: 2000 },
-        height: { min: 900, max: 1600, ideal: 1000 },
 
 
-        // set aspect ratio to 1:1
-        aspectRatio: { ideal: 1 }
-      }
-    };
+          // set ideal aspect ratio to 1:1, but allow for some variation
+          aspectRatio: { ideal: 1 , min: 0.5, max: 2}
+        }
+      };
+    } else {
+      console.log("SELECTING: ", sel_id);
+      constraints = {
+        video: {
+          // facingMode: 'environment',
+          deviceId: sel_id,
+          height: { min: 900, max: 1600, ideal: 1000 },
+          aspectRatio: { ideal: 1 }
+          // height: { min: 1000, max: 2500, ideal: 2000 },
+          // height: { min: 900, max: 2000, ideal: 1000 },
+        }
+      };
+    }
 
     // if (videoRef.current.srcObject) {
     //   videoRef.current.srcObject.getTracks().forEach(track => track.stop());
