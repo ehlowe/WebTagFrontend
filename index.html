@@ -15,7 +15,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + React</title>
-    <script type="module" crossorigin src="/assets/index-GuMTiRKl.js"></script>
+    <script type="module" crossorigin src="/assets/index-BB8qlYLk.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-Y0QS5a6P.css">
   </head>
   <body>
@@ -32,6 +32,14 @@
 
       // window.serverurl="http://DESKTOP-UQ3NLLF:8765/";
       // window.serverurl="http://DESKTOP-EB2LKBR:8765"
+      (function() {
+      // Check if we need to redirect
+      const redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          window.history.replaceState(null, null, redirect);
+        }
+      })();
     </script>
     
   </body>

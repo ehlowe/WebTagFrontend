@@ -30,6 +30,14 @@
 
       // window.serverurl="http://DESKTOP-UQ3NLLF:8765/";
       // window.serverurl="http://DESKTOP-EB2LKBR:8765"
+      (function() {
+      // Check if we need to redirect
+      const redirect = sessionStorage.getItem('redirect');
+        if (redirect) {
+          sessionStorage.removeItem('redirect');
+          window.history.replaceState(null, null, redirect);
+        }
+      })();
     </script>
     
     <script type="module" src="./src/main.jsx"></script>

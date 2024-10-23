@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-function BasicApp(){
+function RedirectApp(){
     const [timeV,setTimeV] = useState(0);
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -32,8 +32,9 @@ function BasicApp(){
     return (
         <div>
             <h1>Redirecting</h1>
+            <button onClick={() => window.location.href = "/"}>If not redirecting to game screen click this button.</button>
         </div>
     )
 }
 
-export default BasicApp
+export default RedirectApp

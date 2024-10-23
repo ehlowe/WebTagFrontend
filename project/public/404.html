@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script>
+      // Get the current path and query string
+      const path = window.location.pathname;
+      const query = window.location.search;
+      
+      // Remove the repository name from the path (if using GitHub project pages)
+      const repoName = ''; // Replace with your repo name
+      const cleanPath = path.replace(repoName, '');
+      
+      // Store the full path in session storage
+      sessionStorage.setItem('redirect', cleanPath + query);
+      
+      // Redirect to the root
+      window.location.href = repoName + '/';
+    </script>
+  </head>
+  <body>
+    Redirecting...
+  </body>
+</html>
