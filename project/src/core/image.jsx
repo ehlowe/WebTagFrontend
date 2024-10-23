@@ -2,7 +2,7 @@
 async function captureAndSendFrame(video, sendMessage) {
     const draw_start = Date.now();
     // const video = videoRef.current;
-    const zoomFactor=5.0
+    const zoomFactor=2.5
     // const zoomFactor=1.0
   
     // Calculate dimensions for zoomed area
@@ -30,7 +30,7 @@ async function captureAndSendFrame(video, sendMessage) {
     tempCanvas.toBlob((blob) => {
       sendMessage({data: blob, id: "img"});
       console.log(`Zoomed image sent: ${blob.size} bytes, dimensions: ${zoomedWidth}x${zoomedHeight}`);
-    }, 'image/jpeg', 1.0);
+    }, 'image/jpeg', 0.7);
 
     const draw_end = Date.now();
     // console.log(`Draw time: ${draw_end - draw_start} ms`);
