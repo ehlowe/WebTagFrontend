@@ -134,9 +134,30 @@ function App(){
         }
     }, [isConnected]);
 
+
+
+
+    // Preload
+    const audioRef = useRef(new Audio("./assets" + "/sounds/hit/hitfast.mp3"));
+    const loadSoundFS = () => {
+      setError(null);
+      audioRef.current.load();
+      audioRef.current.play().then(() => {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setAudioLoaded(true);
+        setIsPlaying(true);
+      }).catch(e => {
+        console.error('Error loading audio:', e);
+        setError('Failed to load audio. Please check the file path and format.');
+      });
+    };
+  
+
     // audio manager
     const { loadSound, playSound, resumeAudioContext } = useAudioManager();
     const initSound = () => {
+        loadSoundFS();
         // const shoot_path='/sounds/shoot/bhew.mp3';
         // const shoot_path='/sounds/shoot/vts5.mp3';
         // const shoot_path='/sounds/shoot/Thump.mp3';
