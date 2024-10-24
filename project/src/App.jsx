@@ -7,6 +7,7 @@ import useWebSocket from "./core/websocket";
 
 import CameraSelector from "./core/camera_switch_popup";
 import CreditsPopup from "./core/sfx_credits";
+import { useConsoleLogger } from "./core/console_logger";
 
 
 import {captureAndSendFrame} from "./core/image";
@@ -350,6 +351,11 @@ function App(){
       setupCamera(videoRef, cameras[cameraIndex.current].deviceId);      
     }
 
+    const { logs, clearLogs } = useConsoleLogger();
+    const [isVisible, setIsVisible] = useState(false);
+
+
+
     // return the display of the app with all its components
     return(<div className="App" style={{ position: 'relative',left: '5%', justifyContent: 'center' ,width: '90%', height: '440px', backgroundColor: healthColor }}>
         <button 
@@ -509,6 +515,42 @@ function App(){
           <button style={{padding: '0px'}}>SFX<br></br>Credits</button>
         </div> */}
         <CreditsPopup />
+
+
+
+        {/* DEBUGGING MOBILE */}
+        <button
+            onClick={() => setIsVisible(!isVisible)}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+          {isVisible ? 'Hide Console' : 'Show Console'}
+        </button>
+        {isVisible && (
+          <div className="border rounded-lg shadow-lg bg-gray-900 text-white p-4 max-h-96 overflow-y-auto font-mono">
+            {logs.length === 0 ? (
+              <div className="text-gray-400">No console logs yet...</div>
+            ) : (
+              logs.map(log => (
+                <div
+                  key={log.id}
+                  className={`py-1 ${
+                    log.type === 'error' ? 'text-red-400' :
+                    log.type === 'warn' ? 'text-yellow-400' :
+                    log.type === 'info' ? 'text-blue-400' :
+                    log.type === 'debug' ? 'text-gray-400' :
+                    'text-white'
+                  }`}
+                >
+                  <span className="text-gray-500 text-sm">{log.timestamp}</span>
+                  {' '}
+                  <span className="text-gray-400">[{log.type}]</span>
+                  {' '}
+                  {log.content}
+                </div>
+              ))
+            )}
+          </div>
+        )}
         
     </div>);
 }
