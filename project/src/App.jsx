@@ -139,6 +139,8 @@ function App(){
 
     // Preload
     const audioRef = useRef(new Audio("./assets" + "/sounds/hit/hitfast.mp3"));
+    const [audioLoaded, setAudioLoaded] = useState(false);
+    const [isPlaying, setIsPlaying] = useState(false);
     const loadSoundFS = () => {
       setError(null);
       audioRef.current.load();
