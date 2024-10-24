@@ -33,12 +33,14 @@ function App(){
     const [ healthColor, setHealthColor ] = useState(null);
 
     // Player Ammo
-    const [ ammo, setAmmo ] = useState(33);
-    const [ mag_size, setMagSize ] = useState(34);
+    const [ ammo, setAmmo ] = useState(20);
+    const [ mag_size, setMagSize ] = useState(20);
     const [ inReload, setInReload ] = useState(false);
 
     // Firing Logic
-    const fireRate=80;
+    // const fireRate=85;
+    const fireRate=85;
+
     const lastFiringTime = useRef(0);
     const [triggerPulled, setTriggerPulled] = useState(false);
     const [isPressed, setIsPressed] = useState(false);
@@ -152,6 +154,8 @@ function App(){
         // loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
         loadSound('shoot', ASSET_PATH+shoot_path);
         loadSound('shoot2', ASSET_PATH+shoot_path);
+        loadSound('shoot3', ASSET_PATH+shoot_path);
+        loadSound('shoot4', ASSET_PATH+shoot_path);
         // loadSound('reload', ASSET_PATH+'/sounds/reload/reload.mp3');
         loadSound('reload', ASSET_PATH+'/sounds/reload/VTreload.mp3');
         // loadSound('reload', ASSET_PATH+'/sounds/kill/VTkill.mp3');
@@ -195,7 +199,7 @@ function App(){
         document.removeEventListener('touchend', handleGlobalMouseUp);
       };
     }, [isPressed, handlePressEnd]);
-    const shoot_audio_ref = useRef(false);
+    const shoot_audio_ref = useRef(0);
     useEffect(() => {
       let shoot_check_interval = setInterval(() => {
           if (triggerPulled){
@@ -207,12 +211,20 @@ function App(){
                       const newammo=ammo-1;
                       setAmmo(newammo);
                       // playSound('shoot');
-                      if (shoot_audio_ref.current){
+                      if (shoot_audio_ref.current==0){
                         playSound('shoot');
-                        shoot_audio_ref.current=false;
-                      }else{
+                        shoot_audio_ref.current=1;
+                      }else if (shoot_audio_ref.current==1){
                         playSound('shoot2');
-                        shoot_audio_ref.current=true;
+                        shoot_audio_ref.current=2;
+                      }
+                      else if (shoot_audio_ref.current==2){
+                        playSound('shoot3');
+                        shoot_audio_ref.current=3;
+                      }
+                      else if (shoot_audio_ref.current==3){
+                        playSound('shoot4');
+                        shoot_audio_ref.current=0;
                       }
 
                       captureAndSendFrame(videoRef.current, sendMessage);
@@ -282,6 +294,7 @@ function App(){
     // if reload is triggered handle logic
     function reloadFunction(){
         if ( !inReload && ammo < mag_size){
+          resumeAudioContext();
           playSound('reload');
           reloadTimed(ammo, setAmmo, mag_size, setInReload);
         }
