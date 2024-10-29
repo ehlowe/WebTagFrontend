@@ -228,9 +228,9 @@ function App(){
           if (triggerPulled){
               if (Date.now() - lastFiringTime.current >= fireRate){
                   // sendImage();
-                  console.log("TIME: ", Date.now() - lastFiringTime.current);
+                  // console.log("TIME: ", Date.now() - lastFiringTime.current);
                   lastFiringTime.current = Date.now();
-                  if (ammo > 0){
+                  if ((ammo > 0)&&(health>0)){
                       const newammo=ammo-1;
                       setAmmo(newammo);
                       // playSound('shoot');
