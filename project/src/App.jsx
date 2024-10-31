@@ -341,11 +341,11 @@ function App(){
     // if reload is triggered handle logic
     function reloadFunction(){
         if ( !inReload && ammo < mag_size){
-          if (navigator.vibrate) {
-            navigator.vibrate(2000);
-          }else{
-            console.log("NO VIBRATE");
-          }
+          // if (navigator.vibrate) {
+          //   navigator.vibrate(2000);
+          // }else{
+          //   console.log("NO VIBRATE");
+          // }
           resumeAudioContext();
           playSound('reload');
           reloadTimed(ammo, setAmmo, mag_size, setInReload);
