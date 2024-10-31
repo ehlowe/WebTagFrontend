@@ -20,6 +20,9 @@ const ASSET_PATH=window.assetpath
 // const AUDIO_FILE = "/sounds/hit/hitfast.mp3";
 const AUDIO_FILE = "/sounds/reload/reload.mp3";
 
+// const audioRef = useRef(new Audio("./assets" + "/sounds/hit/hitfast.mp3"));
+const audioInstance = new Audio("./assets" + "/sounds/hit/hitfast.mp3");
+
 
 
 function App(){
@@ -138,10 +141,24 @@ function App(){
 
 
     // Preload
-    const audioRef = useRef(new Audio("./assets" + "/sounds/hit/hitfast.mp3"));
+    const audioRef = useRef(audioInstance);
     const [audioLoaded, setAudioLoaded] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
-    const loadSoundFS = () => {
+    const playintervalRef = useRef(null);
+  
+    // 2. Memoize the playSoundFS function to prevent recreation on rerenders
+    const playSoundFS = useCallback(() => {
+      if (audioRef.current.paused) {
+        audioRef.current.play().catch(e => {
+          console.error('Error playing audio:', e);
+          setError('Failed to play audio. Please try again.');
+        });
+      } else {
+        audioRef.current.currentTime = 0;
+      }
+    }, []); // Empty dependency array since it only uses refs
+  
+    const loadSoundFS = useCallback(() => {
       setError(null);
       audioRef.current.load();
       audioRef.current.play().then(() => {
@@ -153,8 +170,15 @@ function App(){
         console.error('Error loading audio:', e);
         setError('Failed to load audio. Please check the file path and format.');
       });
-    };
+    }, []);
   
+    // // 4. Interval effect with stable dependencies
+    // useEffect(() => {
+    //   if (isPlaying && audioLoaded) {
+    //     playintervalRef.current = setInterval(playSoundFS, 1000);
+    //     return () => clearInterval(playintervalRef.current);
+    //   }
+    // }, [isPlaying, audioLoaded, playSoundFS]);
 
     // audio manager
     const { loadSound, playSound, resumeAudioContext } = useAudioManager();
@@ -317,6 +341,11 @@ function App(){
     // if reload is triggered handle logic
     function reloadFunction(){
         if ( !inReload && ammo < mag_size){
+          if (navigator.vibrate) {
+            navigator.vibrate(2000);
+          }else{
+            console.log("NO VIBRATE");
+          }
           resumeAudioContext();
           playSound('reload');
           reloadTimed(ammo, setAmmo, mag_size, setInReload);
@@ -414,13 +443,27 @@ function App(){
         <div style={{height: 'auto' , position: 'relative', top: '0%', height: '80%', padding: 0, margin: 0}}>
 
           <div style={{position: 'absolute', padding: "5px", right: '0px', color: 'black'}}>
-            <h2>K: {k}, D: {d}</h2>
+            <h2 style={{
+              userSelect: "none",  // Prevent text selection
+              WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+              WebkitUserSelect: "none",  // Prevent selection on iOS
+              KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+              MozUserSelect: "none",  // Prevent selection on Firefox
+              msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+            }}
+            >K: {k}, D: {d}</h2>
           </div>
           <video ref={videoRef} autoPlay playsInline 
           style={{ 
             width: "100%",
             width: '100%', 
-            height: '100%' , 
+            height: '100%', 
+            userSelect: "none",  // Prevent text selection
+            WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+            WebkitUserSelect: "none",  // Prevent selection on iOS
+            KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+            MozUserSelect: "none",  // Prevent selection on Firefox
+            msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
           }}
           />
           <canvas 
@@ -432,7 +475,13 @@ function App(){
                 width: '100%',
                 height: '100%',
                 pointerEvents: 'none',
-                zIndex: 1000
+                zIndex: 1000,
+                userSelect: "none",  // Prevent text selection
+                WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+                WebkitUserSelect: "none",  // Prevent selection on iOS
+                KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+                MozUserSelect: "none",  // Prevent selection on Firefox
+                msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
             }} 
           />
           {/* If not connected to a lobby display a banner telling user to connect to a lobby */}
@@ -561,6 +610,12 @@ function App(){
           >
           {isVisible ? 'Hide Console' : 'Show Console'}
         </button>
+        {/* <button onClick={() => loadSoundFS()}>
+          Load Sound 1
+        </button>
+        <button onClick={() => initSound()}>
+          Load Sound 2
+        </button> */}
         {isVisible && (
           <div className="border rounded-lg shadow-lg bg-gray-900 text-white p-4 max-h-96 overflow-y-auto font-mono">
             {logs.length === 0 ? (
