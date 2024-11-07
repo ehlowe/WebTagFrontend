@@ -656,8 +656,8 @@ function App(){
             <button style={{zIndex: 10, position: "relative"}} onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
             {((lobbyId!=null)&&(lobbyCount<2))?
               <div style={{ background: 'white', padding: '16px' , zIndex: 10, position: "relative"}}>
-                {/* <QRCode value={(lobbyId!=null)?"https://visiontaglive.com/?lobby_id="+lobbyId:"https://visiontaglive.com/?lobby_id="}/> */}
-                <QRCode value={(lobbyId!=null)?"http://192.168.1.70:5173/?lobby_id="+lobbyId:"http://192.168.1.70:5173/?lobby_id="}/>
+                <QRCode value={(lobbyId!=null)?"https://visiontaglive.com/?lobby_id="+lobbyId:"https://visiontaglive.com/?lobby_id="}/>
+                {/* <QRCode value={(lobbyId!=null)?"http://192.168.1.70:5173/?lobby_id="+lobbyId:"http://192.168.1.70:5173/?lobby_id="}/> */}
               </div>
               :null
             }
