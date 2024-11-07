@@ -3,11 +3,31 @@
   margin: 0 auto;
   top: auto;
   height: auto;
+  width: 100%;
   /* padding: 2rem; */
   text-align: center;
+  /* userSelect: "none",  // Prevent text selection
+  WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+  WebkitUserSelect: "none",  // Prevent selection on iOS
+  KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+  MozUserSelect: "none",  // Prevent selection on Firefox
+  msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+  WebkitTapHighlightColor: "rgba(0,0,0,0)",  //  */
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  /* prevent ios devices from being able to select the root div */
+
 }
 .body{
   top: 0;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 .logo {

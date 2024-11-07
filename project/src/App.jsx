@@ -14,6 +14,12 @@ import {captureAndSendFrame} from "./core/image";
 
 import './App.css';
 
+import React from "react";
+import ReactDOM from "react-dom";
+import QRCode from "react-qr-code";
+
+
+
 // const ASSET_PATH="./project/dist/assets";
 // const ASSET_PATH="./assets";
 const ASSET_PATH=window.assetpath
@@ -69,6 +75,24 @@ function App(){
     const [lobbyCount, setLobbyCount] = useState(null);
     const [lobbyColor, setLobbyColor] = useState('red');
 
+    // get query params
+    useEffect(() => {
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+
+      //get the test param's value
+      const queryParamLobbyId = urlParams.get('lobby_id');
+      console.log("QUERY LOBBY ID:", queryParamLobbyId);
+
+      if (queryParamLobbyId!=null){
+        console.log("NOT NULL PARAM")
+        setInputLobbyId(queryParamLobbyId);
+        // setInputLobbyId("100");
+      } else{
+        console.log("NULL PARAM")
+      }
+      // setInputLobbyId("100");
+    }, []);
 
 
     // Setup camera and crosshair
@@ -422,7 +446,15 @@ function App(){
 
 
     // return the display of the app with all its components
-    return(<div className="App" style={{ position: 'relative',left: '5%', justifyContent: 'center' ,width: '90%', height: '440px', backgroundColor: healthColor }}>
+    return(<div className="App" style={{ position: 'relative',left: '5%', justifyContent: 'center' ,width: '90%', height: '440px', backgroundColor: healthColor ,
+      userSelect: "none",  // Prevent text selection
+      WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+      WebkitUserSelect: "none",  // Prevent selection on iOS
+      KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+      MozUserSelect: "none",  // Prevent selection on Firefox
+      msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+      WebkitTapHighlightColor: "rgba(0,0,0,0)",  //  */
+    }}>
         <button 
         style={{
             // position: "absolute",
@@ -432,7 +464,7 @@ function App(){
             width: "100%",
             height: "10%",
             fontSize: "20px",
-            zIndex: 1,
+            zIndex: 10,
             top: '5%',
         }}
         onMouseDown={reloadFunction}
@@ -453,6 +485,21 @@ function App(){
             }}
             >K: {k}, D: {d}</h2>
           </div>
+          <div style={{position: 'absolute', padding: "5px", right: '0px', color: 'black', top: "10%"}}>
+            {(lobbyCount==1)?
+                <h2 style={{
+                  userSelect: "none",  // Prevent text selection
+                  WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+                  WebkitUserSelect: "none",  // Prevent selection on iOS
+                  KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+                  color: "green",
+                  MozUserSelect: "none",  // Prevent selection on Firefox
+                  msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+                }}
+                >Show QR Code to 2nd player</h2>
+                :null
+              }
+          </div>
           <video ref={videoRef} autoPlay playsInline 
           style={{ 
             width: "100%",
@@ -464,6 +511,7 @@ function App(){
             KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
             MozUserSelect: "none",  // Prevent selection on Firefox
             msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+            zIndex: -10000,
           }}
           />
           <canvas 
@@ -475,7 +523,7 @@ function App(){
                 width: '100%',
                 height: '100%',
                 pointerEvents: 'none',
-                zIndex: 1000,
+                zIndex: 1,
                 userSelect: "none",  // Prevent text selection
                 WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
                 WebkitUserSelect: "none",  // Prevent selection on iOS
@@ -504,8 +552,8 @@ function App(){
                 borderRadius: '0.5rem',
                 textAlign: 'center'
               }}>
-                <h2 style={{ margin: 0, marginBottom: '1rem', zIndex: 1000, color: "black" }}>Connect to Lobby with button below</h2>
-                <p style={{ margin: 0 , zIndex: 1000, color: "black" }}>This enables audio and connects you to the server, join a friend's lobby number to play with them</p>
+                  <h2 style={{ margin: 0, marginBottom: '1rem', zIndex: 1000, color: "black" }}>{(inputLobbyId==null)?"Connect to Lobby with button below": "Click 'Join Lobby' below to connect to lobby: "+inputLobbyId}</h2>
+                  <p style={{ margin: 0 , zIndex: 1000, color: "black" }}>This enables audio and connects you to the server, join a friend's lobby number to play with them</p>
               </div>
             </div>
           )}
@@ -547,36 +595,73 @@ function App(){
               MozUserSelect: "none",  // Prevent selection on Firefox
               msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
               WebkitTapHighlightColor: "rgba(0,0,0,0)",  // 
+              zIndex: 10,
               }}
               onMouseDown={handlePressStart}
               onTouchStart={handlePressStart}
           >
               FIRE
           </button>
+          <button 
+              style={{
+              // height: "50px",
+              width: "100%",
+              height: "90%",
+              fontSize: "20px",
+              position: "absolute",
+              top: '10%',
+              left: '0%',
+              opacity: 0.0,
+              zIndex: 5,
+              // backgroundColor: fireColor,
+              userSelect: "none",  // Prevent text selection
+              WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+              WebkitUserSelect: "none",  // Prevent selection on iOS
+              KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+              MozUserSelect: "none",  // Prevent selection on Firefox
+              msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+              WebkitTapHighlightColor: "rgba(0,0,0,0)",  // 
+              }}
+              onMouseDown={handlePressStart}
+              onTouchStart={handlePressStart}
+          />
+
           <p>Health: {health}, Enemy Health: {enemyHealth}<br></br> Hit Latency: {latencyNum}, Lobby {lobbyId}, {lobbyCount}/2 players</p>
         </div>
         {!isConnected ? (
         <div>
             <input
-            type="number"
-            value={inputLobbyId || ''}
-            onChange={(e) => setInputLobbyId(e.target.value)}
-            placeholder="Enter lobby ID (optional)"
-            style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' }}
+              type="number"
+              value={inputLobbyId}
+              onChange={(e) => setInputLobbyId(e.target.value)}
+              placeholder="Enter lobby ID (optional)"
+              style={{ border: '1px solid #ccc', padding: '0.5rem', marginRight: '0.5rem' ,zIndex: 10, position: 'relative', top: '0%', width: '60%'}}
             />
             <button 
                 style={{
                     backgroundColor: lobbyColor,
+                    width: '60%',
+                    zIndex: 10,
+                    position: 'relative',
                 }}
                 onClick={joinLobby}
                 // onTouchStart={joinLobby}
                 disabled={!!cameraError}
             >
-                Connect to Lobby
+                {(inputLobbyId=="")?"Connect to Lobby": "Join Lobby"}
             </button>
         </div>
         ) : (
-        <button onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
+          <div >
+            <button style={{zIndex: 10, position: "relative"}} onClick={disconnect}>Disconnect, Lobby: {lobbyId}</button>
+            {((lobbyId!=null)&&(lobbyCount<2))?
+              <div style={{ background: 'white', padding: '16px' , zIndex: 10, position: "relative"}}>
+                {/* <QRCode value={(lobbyId!=null)?"https://visiontaglive.com/?lobby_id="+lobbyId:"https://visiontaglive.com/?lobby_id="}/> */}
+                <QRCode value={(lobbyId!=null)?"http://192.168.1.70:5173/?lobby_id="+lobbyId:"http://192.168.1.70:5173/?lobby_id="}/>
+              </div>
+              :null
+            }
+          </div>
         )}
         <CameraSelector 
           cameras={cameras} 
@@ -604,7 +689,7 @@ function App(){
 
 
         {/* DEBUGGING MOBILE */}
-        <button
+        <button style={{zIndex: 10, position: "relative"}}
             onClick={() => setIsVisible(!isVisible)}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >

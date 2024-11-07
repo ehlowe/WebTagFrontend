@@ -4,10 +4,10 @@ const CreditsPopup = () => {
   const [isOpen, setIsOpen] = useState(false);
   
   return (
-    <div style={{position: "absolute", bottom: '-200px', left: 0}}>
+    <div style={{position: "absolute", bottom: '-120px', left: 0}}>
       <button 
         onClick={() => setIsOpen(true)}
-        style={{padding: '0px'}}
+        style={{padding: '0px', zIndex: 10, position: "relative"}}
       >
         SFX<br></br>Credits
       </button>

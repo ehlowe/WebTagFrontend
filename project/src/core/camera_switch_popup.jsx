@@ -13,7 +13,8 @@ const CameraSelector = ({ cameras, onCameraSelect }) => {
         //   position: 'absolute',
         //   top: '10px',
         //   right: '10px',
-          zIndex: 2
+          position: 'relative',
+          zIndex: 10
         }}
       >
         Change Camera <Camera className="h-4 w-4" />

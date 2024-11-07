@@ -2,10 +2,16 @@
 
 function getHealthColor(health, maxHealth) {
     health = Math.max(0, Math.min(health, maxHealth));
+    if (health <= 0) {
+      // purple color for dead
+      return 'hsl(300, 100%, 30%)';
+    }
+
     const healthPercentage = (health / maxHealth)**1.5;
     const hue = healthPercentage * 120;
     const saturation = 100 - (healthPercentage * 20);
     const lightness = 40 + (healthPercentage * 20);
+
     return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
   }
 
