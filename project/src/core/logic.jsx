@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { getHealthColor } from "./misc";
 
 
-function useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD) {
+function useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD, setLatencyNum, lastFiringTime) {
   // if health changes handle logic
   useEffect(() => {
     if (lastMessage == null){
@@ -32,6 +32,7 @@ function useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth
         if (hithealthdata.hit){
             console.log("HIT");
             playSound('hit');
+            setLatencyNum((Date.now() - lastFiringTime.current));
         }
         if (hithealthdata.kill==true){
             console.log("KILL");

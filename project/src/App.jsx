@@ -47,8 +47,8 @@ function App(){
     const [ inReload, setInReload ] = useState(false);
 
     // Firing Logic
-    // const fireRate=85;
-    const fireRate=85;
+    const fireRate=74;
+    //const fireRate=85;
 
     const lastFiringTime = useRef(0);
     const [triggerPulled, setTriggerPulled] = useState(false);
@@ -360,7 +360,16 @@ function App(){
 
 
     // handle health and surrounding logic
-    useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD);
+    useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD, setLatencyNum, lastFiringTime);
+
+
+    // // monitor the enemyHealth and update latencyNum when the enemyHealth changes
+    // useEffect(() => {
+    //   if (enemyHealth != prevEnemyHealth.current){
+    //     const latency=Date.now()-lastFiringTime.current;
+    //     setLatencyNum(latency);
+    //   }
+    // }, [enemyHealth, lastFiringTime, latencyNum]);
 
     // if reload is triggered handle logic
     function reloadFunction(){
