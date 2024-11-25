@@ -72,8 +72,9 @@ async function setupCamera(videoRef, sel_id) {
         video: {
           // facingMode: 'environment',
           deviceId: sel_id,
-          height: { min: 900, max: 1600, ideal: 1000 },
-          aspectRatio: { ideal: 1 }
+          // deviceId: '6938f90c7025c8ee4c4e4ad46e712b4c010526f79eee176238f08c69505402cd',
+          // height: { min: 900, max: 1600, ideal: 1000 },
+          // aspectRatio: { ideal: 1 }
           // height: { min: 1000, max: 2500, ideal: 2000 },
           // height: { min: 900, max: 2000, ideal: 1000 },
         }

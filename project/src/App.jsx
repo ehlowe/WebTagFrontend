@@ -7,7 +7,9 @@ import useWebSocket from "./core/websocket";
 
 import CameraSelector from "./core/camera_switch_popup";
 import CreditsPopup from "./core/sfx_credits";
+
 import { useConsoleLogger } from "./core/console_logger";
+import { useWasmLoader } from './core/wasm_loader';
 
 
 import {captureAndSendFrame} from "./core/image";
@@ -28,6 +30,7 @@ const AUDIO_FILE = "/sounds/reload/reload.mp3";
 
 // const audioRef = useRef(new Audio("./assets" + "/sounds/hit/hitfast.mp3"));
 const audioInstance = new Audio("./assets" + "/sounds/hit/hitfast.mp3");
+
 
 
 
@@ -74,6 +77,29 @@ function App(){
     const [lobbyId, setLobbyId] = useState(null);
     const [lobbyCount, setLobbyCount] = useState(null);
     const [lobbyColor, setLobbyColor] = useState('red');
+
+
+
+
+    const { wasmLoaded, wasm_error } = useWasmLoader();
+
+    useEffect(() => {
+      if (wasmLoaded) {
+          console.log('WASM module is ready to use!');
+          // Initialize any WASM-dependent features here
+      }
+    }, [wasmLoaded]);
+
+
+
+
+
+
+
+
+
+
+
 
     // get query params
     useEffect(() => {
@@ -298,7 +324,30 @@ function App(){
                         shoot_audio_ref.current=0;
                       }
 
-                      captureAndSendFrame(videoRef.current, sendMessage);
+
+                      // server method
+                      //captureAndSendFrame(videoRef.current, sendMessage);
+
+                      // local method
+                      var canvas = document.createElement('canvas');
+                      var ctx = canvas.getContext('2d');
+
+                      canvas.width = 640;
+                      canvas.height = 480;
+                      ctx.drawImage(videoRef.current, 0, 0, 640, 480);
+          
+                      var imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                      var data = imageData.data;
+
+                      var dst=new Uint8Array(data.length);
+          
+                      HEAPU8.set(data, dst);
+          
+                      _nanodet_ncnn(dst, canvas.width, canvas.height);
+          
+                      var result = HEAPU8.subarray(dst, dst + data.length);
+                      console.log(result);
+
                       if (newammo <= 0){
                           reloadFunction();
                       }
@@ -675,9 +724,9 @@ function App(){
         <CameraSelector 
           cameras={cameras} 
           onCameraSelect={(index) => {
-            cameraIndex.current = index;
+            cameraIndex.current = 0;
             stopCam();
-            setupCamera(videoRef, cameras[index].deviceId);
+            setupCamera(videoRef, cameras[0].deviceId);
           }} 
         />
         {/* <button onClick={switchCamera}>Wrong Camera? Switch</button> */}
