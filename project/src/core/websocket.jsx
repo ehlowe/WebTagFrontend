@@ -49,14 +49,15 @@ class WebSocketManager {
   
     // Additional methods for reconnection, etc.
   }
-function useWebSocket(connection_url) {
+function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false);
   const [lastMessage, setLastMessage] = useState(null);
   const [lastError, setLastError] = useState(null);
+  const wss_url = useRef(null);
   const wsManagerRef = useRef(null);
 
   useEffect(() => {
-    wsManagerRef.current = new WebSocketManager(connection_url);//'https://hippo-funny-formerly.ngrok-free.app/');
+    // wsManagerRef.current = new WebSocketManager(wss_url);//'https://hippo-funny-formerly.ngrok-free.app/');
     function handleOpen() {
         setIsConnected(true);
         const lobbyId=0;
@@ -78,6 +79,7 @@ function useWebSocket(connection_url) {
   }, []);
   
   const connect = useCallback((lobbyId = null) => {
+    wsManagerRef.current = new WebSocketManager(wss_url.current);
     if (wsManagerRef.current) {
         const handleOpen = () => {
             setIsConnected(true);
@@ -100,7 +102,7 @@ function useWebSocket(connection_url) {
     wsManagerRef.current.send(message);
   }, []);
 
-  return { isConnected, lastMessage, connect, disconnect, sendMessage };
+  return { isConnected, lastMessage, connect, disconnect, sendMessage, wss_url};
 }
 
 export default useWebSocket;
