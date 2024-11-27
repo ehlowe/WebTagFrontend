@@ -1,22 +1,46 @@
+
+// Basic React Import
 import { useEffect, useState, useRef, useCallback } from "react";
-
-import { getHealthColor, drawCrosshair, setupCamera } from "./core/misc";
-import { useHealthEffect, handleHealthUpdate, reloadTimed } from "./core/logic";
-import { useAudioManager } from "./core/audio";
-import useWebSocket from "./core/websocket";
-
-import CameraSelector from "./core/camera_switch_popup";
-import CreditsPopup from "./core/sfx_credits";
-import { useConsoleLogger } from "./core/console_logger";
-
-
-import {captureAndSendFrame} from "./core/image";
-
-import './App.css';
-
 import React from "react";
 import ReactDOM from "react-dom";
 import QRCode from "react-qr-code";
+
+// Styles
+import './App.css';
+
+
+
+// Custom Components
+// Core Logic
+import { useHealthEffect, handleHealthUpdate } from "./core/logic";
+import useFiringDetection, { reloadFunction } from "./core/logic/firing";
+
+
+// Core Audio
+import { useAudioManager } from "./core/audio";
+
+// Core WebSocket
+import useWebSocket, { usePeriodicSend } from "./core/websocket";
+
+// Core Router
+import { useServerRouter } from "./core/router";
+
+// Core Visibility
+import { handleVisibilityChange } from "./core/visibility";
+
+// Core Image
+import {useImgZoomer, captureAndSendFrame, drawCrosshair, setupCamera, stopCam, useCamera} from "./core/image";
+
+// Core Misc
+import { useGetQueryParams } from "./core/misc";
+
+
+// Popups and Logger
+import CameraSelector from "./core/popups/camera_switch_popup";
+import CreditsPopup from "./core/popups/sfx_credits";
+import { useConsoleLogger } from "./core/console_logger";
+
+
 
 
 
@@ -27,7 +51,6 @@ const ASSET_PATH=window.assetpath
 const AUDIO_FILE = "/sounds/reload/reload.mp3";
 
 // const audioRef = useRef(new Audio("./assets" + "/sounds/hit/hitfast.mp3"));
-const audioInstance = new Audio("./assets" + "/sounds/hit/hitfast.mp3");
 
 
 
@@ -47,17 +70,13 @@ function App(){
     const [ inReload, setInReload ] = useState(false);
 
     // Firing Logic
-    const fireRate=74;
+    // const fireRate=74;
+    const fireRate=30;
+
+    const reload_time=3.5;
     //const fireRate=85;
 
-    const lastFiringTime = useRef(0);
-    const [triggerPulled, setTriggerPulled] = useState(false);
-    const [isPressed, setIsPressed] = useState(false);
-    const [fireColor, setFireColor] = useState("gray");
     const [zoomedMode, setZoomedMode] = useState(false);
-    const [zoomedRef, setZoomedRef] = useState(null);
-    const zoomedCanvas = useRef(null);
-    const [selectedCamera, setSelectedCamera] = useState(null);
     const cameraIndex = useRef(null);
 
     // Enemy Health
@@ -70,402 +89,88 @@ function App(){
     const [error, setError] = useState(null);
 
     // lobby info
-    const [inputLobbyId, setInputLobbyId] = useState('');
     const [lobbyId, setLobbyId] = useState(null);
     const [lobbyCount, setLobbyCount] = useState(null);
     const [lobbyColor, setLobbyColor] = useState('red');
 
+
+
+
+
+
+
+
     // get query params
-    useEffect(() => {
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-
-      //get the test param's value
-      const queryParamLobbyId = urlParams.get('lobby_id');
-      console.log("QUERY LOBBY ID:", queryParamLobbyId);
-
-      if (queryParamLobbyId!=null){
-        console.log("NOT NULL PARAM")
-        setInputLobbyId(queryParamLobbyId);
-        // setInputLobbyId("100");
-      } else{
-        console.log("NULL PARAM")
-      }
-      // setInputLobbyId("100");
-    }, []);
+    const [inputLobbyId, setInputLobbyId] = useGetQueryParams();
 
 
-    // Setup camera and crosshair
+
+    // // IMAGE
     const videoRef = useRef(null);
     const crosshairRef = useRef(null);
-    const [cameras, setCameras] = useState([]);
-    const getCameras = async () => {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const videoDevices = devices.filter(device => device.kind === 'videoinput');
-        console.log('Cameras:', videoDevices);
-        setCameras(videoDevices);
-        
-        // Automatically select the 3x zoom camera if it's the third rear camera
-        if (videoDevices.length >= 3) {
-          setSelectedCamera(videoDevices[2].deviceId);
-        } else {
-          setSelectedCamera(videoDevices[0].deviceId);
-        }
-      } catch (err) {
-        console.error('Error getting cameras:', err);
-      }
-    };
-    // get the cameras to see the options
-    useEffect(() => {
-        getCameras();
-    }, []);
-    useEffect(() => {
-      if (cameras.length != 0){
-        const sel_id=cameras[0].deviceId;
-        crosshairRef.current = drawCrosshair(crosshairRef.current);
-        setupCamera(videoRef, null);
-      }
-    }, [cameras]);
+    const { cameras, selectedCamera, setSelectedCamera } = useCamera(videoRef, crosshairRef);
 
+    // handle zooming image
+    const zoomedCanvas = useImgZoomer(videoRef, zoomedMode);
+    
+    // handle visibility change
+    const prevVisibility = useRef(document.visibilityState);
+    document.addEventListener('visibilitychange', () => handleVisibilityChange(videoRef, cameras, prevVisibility));
+
+    // handle console visibility
+    const [isVisible, setIsVisible] = useState(false);
+    const { logs, clearLogs } = useConsoleLogger();
+
+
+
+
+    // // CONNECTIONS
     // manage connection with server
-    const { isConnected, lastMessage, connect, disconnect, sendMessage, wss_url } = useWebSocket(window.serverurl);
-
-    const routerUrl='https://seal-app-o65d5.ondigitalocean.app/route';
-    //const routerUrl='http://localhost:8000/route';
-
-
-    // fetch to the router on load
-    useEffect(() => {
-      // fetch to https://24.144.65.101/test and console.log the response
-      fetch(routerUrl)
-        .then(response => response.json())
-        .then(data => {
-          console.log("TEST DATA:", data)
-          setServerInfo(data);
-        })
-        .catch(error => console.error('Error fetching data:', error));
-
-      // set wss to "wss://"+response.pod_id+"-8765.proxy.runpod.net/
-    }, []);
-
+    const { isConnected, lastMessage, connect, disconnect, sendMessage, wss_url } = useWebSocket(window.serverurl, setLobbyId, setLobbyCount);
 
     // Handle connection polling
-    const [isPolling, setIsPolling] = useState(false);
-    const [serverInfo, setServerInfo] = useState({});
-    const pollTimeoutRef = useRef(null);
-    const pollIntervalRef = useRef(null);
+    const { isPolling, setIsPolling, serverInfo} = useServerRouter(wss_url, connect, inputLobbyId);
 
-    useEffect(() => {
-        if (isPolling) {
-            // Record start time for polling
-            const startTime = Date.now();
-            const TIMEOUT_DURATION = 40000; // 40 seconds in milliseconds
-            const POLL_INTERVAL = 1000; // 1 second in milliseconds
-
-            // Poll every second using time-based check
-            pollIntervalRef.current = setInterval(() => {
-                const elapsedTime = Date.now() - startTime;
-                
-                // Check if we've exceeded timeout duration
-                if (elapsedTime >= TIMEOUT_DURATION) {
-                    setIsPolling(false);
-                    clearInterval(pollIntervalRef.current);
-                    console.log("Connection polling timed out after 40 seconds");
-                    return;
-                }
-
-                fetch(routerUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("POLL DATA:", data);
-                        setServerInfo(data);
-                        if (data.status == "RUNNING") {
-                            setIsPolling(false);
-                            clearInterval(pollIntervalRef.current);
-                            console.log("Connection successful:", data);
-                            wss_url.current = "wss://"+data.pod_id+"-8765.proxy.runpod.net/";
-                            joinLobby();
-                            console.log("POLLING DONE: ", wss_url.current);
-                        }
-                    })
-                    .catch(error => console.error('Error polling connection:', error));
-            }, POLL_INTERVAL);
-        }
-
-        return () => {
-            if (pollIntervalRef.current) {
-                clearInterval(pollIntervalRef.current);
-            }
-        };
-    }, [isPolling, wss_url, serverInfo]);
     // Update joinLobby to trigger polling
     function joinLobbyRequest() {
+      initSound();
       setIsPolling(true);
+
+      // // if testing
+      // setIsPolling(false);
+      // connect(inputLobbyId);
     }
-
-
-
-
-
-
-
-
-
 
     // periodically send data to server
-    useEffect(() => {
-        const interval = setInterval(() => {
-            if (isConnected) {
-                sendMessage({ data: "1234567891011121314151617181920" });
-            }
-        }, 50);
+    usePeriodicSend(isConnected, sendMessage);
 
-        return () => {
-            clearInterval(interval);
-        }
-    }, [isConnected]);
 
-    // lobby connect
-    function joinLobby(){
-        initSound();
-        setLobbyColor('green')
-        connect(inputLobbyId);
+
+
+   
+
+    // AUDIO
+    const { loadSound, playSound, resumeAudioContext, initSound } = useAudioManager();
+
+
+
+    // // GAME LOGIC
+    // handle firing and trigger logic
+    const { isPressed, triggerPulled, fireColor, lastFiringTime, setIsPressed, shootPressed } = useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, playSound, health, sendMessage, videoRef);
+
+    function handlePressStart(){
+      setIsPressed(true);
+      shootPressed();
     }
-
-    useEffect(() => {
-        if (isConnected){
-            setLobbyColor('green');
-        }else{
-            setLobbyColor('red');
-            setLobbyId(null);
-            setLobbyCount(null);
-        }
-    }, [isConnected]);
-
-
-
-
-    // Preload
-    const audioRef = useRef(audioInstance);
-    const [audioLoaded, setAudioLoaded] = useState(false);
-    const [isPlaying, setIsPlaying] = useState(false);
-    const playintervalRef = useRef(null);
-  
-    // 2. Memoize the playSoundFS function to prevent recreation on rerenders
-    const playSoundFS = useCallback(() => {
-      if (audioRef.current.paused) {
-        audioRef.current.play().catch(e => {
-          console.error('Error playing audio:', e);
-          setError('Failed to play audio. Please try again.');
-        });
-      } else {
-        audioRef.current.currentTime = 0;
-      }
-    }, []); // Empty dependency array since it only uses refs
-  
-    const loadSoundFS = useCallback(() => {
-      setError(null);
-      audioRef.current.load();
-      audioRef.current.play().then(() => {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-        setAudioLoaded(true);
-        setIsPlaying(true);
-      }).catch(e => {
-        console.error('Error loading audio:', e);
-        setError('Failed to load audio. Please check the file path and format.');
-      });
-    }, []);
-  
-    // // 4. Interval effect with stable dependencies
-    // useEffect(() => {
-    //   if (isPlaying && audioLoaded) {
-    //     playintervalRef.current = setInterval(playSoundFS, 1000);
-    //     return () => clearInterval(playintervalRef.current);
-    //   }
-    // }, [isPlaying, audioLoaded, playSoundFS]);
-
-    // audio manager
-    const { loadSound, playSound, resumeAudioContext } = useAudioManager();
-    const initSound = () => {
-        loadSoundFS();
-        // const shoot_path='/sounds/shoot/bhew.mp3';
-        // const shoot_path='/sounds/shoot/vts5.mp3';
-        // const shoot_path='/sounds/shoot/Thump.mp3';
-        // const shoot_path='/sounds/shoot/Thump2.mp3';
-        const shoot_path='/sounds/shoot/VTshoot_L.mp3';
-
-        // const shoot_path='/sounds/shoot/Thump_L.mp3';
-        // const shoot_path='/sounds/hit/VThit.mp3';
-        // const shoot_path='/sounds/kill/VTkill.mp3';
-
-
-
-
-        resumeAudioContext();
-        // loadSound('shoot', ASSET_PATH+'/sounds/shoot/acr.mp3');
-        loadSound('shoot', ASSET_PATH+shoot_path);
-        loadSound('shoot2', ASSET_PATH+shoot_path);
-        loadSound('shoot3', ASSET_PATH+shoot_path);
-        loadSound('shoot4', ASSET_PATH+shoot_path);
-        // loadSound('reload', ASSET_PATH+'/sounds/reload/reload.mp3');
-        loadSound('reload', ASSET_PATH+'/sounds/reload/VTreload.mp3');
-        // loadSound('reload', ASSET_PATH+'/sounds/kill/VTkill.mp3');
-        // loadSound('reload', ASSET_PATH+'/sounds/dead/VTdeath.mp3');
-
-        // loadSound('hit', ASSET_PATH+'/sounds/hit/hitfast.mp3');
-        loadSound('hit', ASSET_PATH+'/sounds/hit/VThit.mp3');
-        loadSound('kill', ASSET_PATH+'/sounds/kill/VTkill.mp3');
-        loadSound('dead', ASSET_PATH+'/sounds/dead/VTdeath.mp3');
-    };
-
-
-    // handle fire button press
-    const handlePressStart = useCallback(() => {
-        setIsPressed(true);
-        shootPressed();
-    }, []);
-    const handlePressEnd = useCallback(() => {
-        setIsPressed(false);
-        shootReleased(); 
-    }, []);
-    function shootPressed(){
-        setTriggerPulled(true);
-        setFireColor("red");
-    }
-    function shootReleased(){
-        setTriggerPulled(false);
-        setFireColor("gray");
-    }
-    useEffect(() => {
-      const handleGlobalMouseUp = () => {
-        if (isPressed) {
-          handlePressEnd();
-        }
-      };
-      document.addEventListener('mouseup', handleGlobalMouseUp);
-      document.addEventListener('touchend', handleGlobalMouseUp);
-  
-      return () => {
-        document.removeEventListener('mouseup', handleGlobalMouseUp);
-        document.removeEventListener('touchend', handleGlobalMouseUp);
-      };
-    }, [isPressed, handlePressEnd]);
-    const shoot_audio_ref = useRef(0);
-    useEffect(() => {
-      let shoot_check_interval = setInterval(() => {
-          if (triggerPulled){
-              if (Date.now() - lastFiringTime.current >= fireRate){
-                  // sendImage();
-                  // console.log("TIME: ", Date.now() - lastFiringTime.current);
-                  lastFiringTime.current = Date.now();
-                  if ((ammo > 0)&&(health>0)){
-                      const newammo=ammo-1;
-                      setAmmo(newammo);
-                      // playSound('shoot');
-                      if (shoot_audio_ref.current==0){
-                        playSound('shoot');
-                        shoot_audio_ref.current=1;
-                      }else if (shoot_audio_ref.current==1){
-                        playSound('shoot2');
-                        shoot_audio_ref.current=2;
-                      }
-                      else if (shoot_audio_ref.current==2){
-                        playSound('shoot3');
-                        shoot_audio_ref.current=3;
-                      }
-                      else if (shoot_audio_ref.current==3){
-                        playSound('shoot4');
-                        shoot_audio_ref.current=0;
-                      }
-
-                      captureAndSendFrame(videoRef.current, sendMessage);
-                      if (newammo <= 0){
-                          reloadFunction();
-                      }
-                  }
-              }
-          }
-      }, 10);
-      return () => {
-          clearInterval(shoot_check_interval);
-      }
-
-    }, [triggerPulled, lastFiringTime, ammo]);
-
-
-
-    
-
-
-    function zoom_img(video, targetCanvas) {
-      const zoomFactor = 5.0;
-      
-      const zoomedWidth = Math.floor(video.videoWidth / zoomFactor);
-      const zoomedHeight = Math.floor(video.videoHeight / zoomFactor);
-      
-      targetCanvas.width = zoomedWidth;
-      targetCanvas.height = zoomedHeight;
-      const ctx = targetCanvas.getContext('2d');
-      
-      const sx = Math.floor((video.videoWidth - zoomedWidth) / 2);
-      const sy = Math.floor((video.videoHeight - zoomedHeight) / 2);
-      
-      ctx.drawImage(
-        video,
-        sx, sy, zoomedWidth, zoomedHeight,
-        0, 0, zoomedWidth, zoomedHeight
-      );
-    }
-    // everytime videoRef changes run this function
-    useEffect(() => {
-      // if ((videoRef.current) && (zoomedMode)){
-      let interval = setInterval(() => {
-        if (zoomedMode){
-          console.log("ZOOMING");
-          zoom_img(videoRef.current, zoomedCanvas.current);
-        
-        }
-      }
-      , 30);
-
-      return () => {
-        clearInterval(interval);
-      }
-    }, [videoRef]);
-
-
-
-
-
-
 
     // handle health and surrounding logic
     useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD, setLatencyNum, lastFiringTime);
 
 
-    // // monitor the enemyHealth and update latencyNum when the enemyHealth changes
-    // useEffect(() => {
-    //   if (enemyHealth != prevEnemyHealth.current){
-    //     const latency=Date.now()-lastFiringTime.current;
-    //     setLatencyNum(latency);
-    //   }
-    // }, [enemyHealth, lastFiringTime, latencyNum]);
 
-    // if reload is triggered handle logic
-    function reloadFunction(){
-        if ( !inReload && ammo < mag_size){
-          // if (navigator.vibrate) {
-          //   navigator.vibrate(2000);
-          // }else{
-          //   console.log("NO VIBRATE");
-          // }
-          resumeAudioContext();
-          playSound('reload');
-          reloadTimed(ammo, setAmmo, mag_size, setInReload);
-        }
-    }
+
+
+
 
     // // if the screen is turned off close everything and stop camera
     // useEffect(() => {
@@ -485,54 +190,7 @@ function App(){
     //     document.removeEventListener("visibilitychange", handleVisibilityChange);
     //   };
     // }, []);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    const prevVisibility = useRef(document.visibilityState);
-    function handleVisibilityChange() {
-      console.log(document.visibilityState)
 
-      // if the state is hiiden navigate to the /re-enter page
-      if (document.visibilityState === 'hidden') {
-        window.location.href = "/re-enter";
-      }
-
-
-
-      // console.log(document.visibilityState);
-      // if (document.visibilityState === prevVisibility.current) {
-      //   return;
-      // }
-
-      // if (document.visibilityState !='visible'){
-      //   console.log("STOPPING CAMERA");
-      //   stopCam();
-      // } else if (document.visibilityState === 'visible') {
-      //   // getCameras();
-      //   console.log('Page visible - refreshing', document.hidden);
-      //   setupCamera(videoRef, cameras[0].deviceId);
-      // }
-    } 
-    function stopCam(){
-      if (videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
-      }
-    }
-
-    function switchCamera(){
-      const num_cams=cameras.length;
-      stopCam();
-      if (cameraIndex.current == null){
-        cameraIndex.current=0;
-      }else if (cameraIndex.current < num_cams-1){
-        cameraIndex.current+=1;
-      }else{
-        cameraIndex.current=0;
-      }
-      console.log(cameraIndex.current);
-      setupCamera(videoRef, cameras[cameraIndex.current].deviceId);      
-    }
-
-    const { logs, clearLogs } = useConsoleLogger();
-    const [isVisible, setIsVisible] = useState(false);
 
 
 
@@ -558,8 +216,8 @@ function App(){
             zIndex: 10,
             top: '5%',
         }}
-        onMouseDown={reloadFunction}
-        onTouchStart={reloadFunction}
+        onMouseDown={()=>reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time)}
+        onTouchStart={()=>reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time)}
         >
         RELOAD {ammo}/{mag_size}
         </button>

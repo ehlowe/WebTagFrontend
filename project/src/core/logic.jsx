@@ -1,7 +1,21 @@
 
 import { useEffect } from 'react';
-import { getHealthColor } from "./misc";
 
+
+function getHealthColor(health, maxHealth) {
+  health = Math.max(0, Math.min(health, maxHealth));
+  if (health <= 0) {
+    // purple color for dead
+    return 'hsl(300, 100%, 30%)';
+  }
+
+  const healthPercentage = (health / maxHealth)**1.5;
+  const hue = healthPercentage * 120;
+  const saturation = 100 - (healthPercentage * 20);
+  const lightness = 40 + (healthPercentage * 20);
+
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+}
 
 function useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth, setEnemyHealth, prevEnemyHealth, setHealthColor, playSound, setAmmo, mag_size, setLobbyId, setLobbyCount, setK, setD, setLatencyNum, lastFiringTime) {
   // if health changes handle logic
@@ -73,24 +87,4 @@ function handleHealthUpdate(health, prevHealth, enemyHealth, prevEnemyHealth) {
   return data;
 }
 
-
-function reloadTimed(ammo, setAmmo, mag_size, setInReload){
-
-  if (ammo === mag_size){
-    return;
-  }
-  let reload_time=3.5;
-  setAmmo(0);
-  setInReload(true);
-  const interval = setTimeout(() => {
-    setAmmo(mag_size);
-    setInReload(false);
-  }, reload_time*1000);
-
-  return () => {
-    clearTimeout(interval);
-    setInReload(false);
-  };
-}
-
-export { useHealthEffect, handleHealthUpdate, reloadTimed };
+export { useHealthEffect, handleHealthUpdate };

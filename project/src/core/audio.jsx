@@ -1,9 +1,14 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 
+const audioInstance = new Audio("./assets" + "/sounds/hit/hitfast.mp3");
+
+
 const useAudioManager = () => {
   const audioContext = useRef(null);
   const audioBuffers = useRef({});
   const audioSources = useRef({});
+  const audioRef = useRef(audioInstance);
+
 
   const initializeAudioContext = useCallback(() => {
     if (!audioContext.current) {
@@ -25,6 +30,15 @@ const useAudioManager = () => {
     },
     []
   );
+  const loadSoundFS = useCallback(() => {
+    audioRef.current.load();
+    audioRef.current.play().then(() => {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }).catch(e => {
+      console.error('Error loading audio:', e);
+    });
+  }, []);
 
   const playSound = useCallback(
     (name) => {
@@ -53,6 +67,26 @@ const useAudioManager = () => {
     }
   }, [initializeAudioContext]);
 
+  function initSound(){
+    loadSoundFS();
+    resumeAudioContext();
+    const ASSET_PATH=window.assetpath;
+    
+    const shoot_path='/sounds/shoot/VTshoot_L.mp3';
+    loadSound('shoot', ASSET_PATH+shoot_path);
+    loadSound('shoot2', ASSET_PATH+shoot_path);
+    loadSound('shoot3', ASSET_PATH+shoot_path);
+    loadSound('shoot4', ASSET_PATH+shoot_path);
+
+    loadSound('reload', ASSET_PATH+'/sounds/reload/VTreload.mp3');
+
+    loadSound('hit', ASSET_PATH+'/sounds/hit/VThit.mp3');
+
+    loadSound('kill', ASSET_PATH+'/sounds/kill/VTkill.mp3');
+
+    loadSound('dead', ASSET_PATH+'/sounds/dead/VTdeath.mp3');
+  }
+
   useEffect(() => {
     return () => {
       if (audioContext.current) {
@@ -61,7 +95,7 @@ const useAudioManager = () => {
     };
   }, []);
 
-  return { loadSound, playSound, resumeAudioContext };
+  return { loadSound, playSound, resumeAudioContext, initSound};
 };
 
 export { useAudioManager };
