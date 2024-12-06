@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
 function useServerRouter(wss_url, connect, inputLobbyId){
-    const routerUrl='https://seal-app-o65d5.ondigitalocean.app/route';
+    //const routerUrl='https://seal-app-o65d5.ondigitalocean.app/route';
+    const routerUrl='https://hippo-funny-formerly.ngrok-free.app';
     //const routerUrl='http://localhost:8000/route';
 
 
