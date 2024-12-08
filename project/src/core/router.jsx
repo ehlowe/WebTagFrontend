@@ -37,6 +37,11 @@ function useServerRouter(wss_url, connect, inputLobbyId){
     
     useEffect(() => {
         if (isPolling) {
+
+            // wss_url.current = "ws://localhost:8765/"//"wss://"+data.pod_id+"-8765.proxy.runpod.net/";
+            // routerConnectToServer('1')
+            
+
             // Record start time for polling
             const startTime = Date.now();
             const TIMEOUT_DURATION = 40000; // 40 seconds in milliseconds

@@ -30,7 +30,7 @@ import { handleVisibilityChange } from "./core/visibility";
 
 // Core Image
 import {useImgZoomer, captureAndSendFrame, drawCrosshair, setupCamera, stopCam, useCamera} from "./core/image";
-
+import useEnemyBar from "./core/enemybar";
 // Core Misc
 import { useGetQueryParams } from "./core/misc";
 
@@ -168,6 +168,13 @@ function App(){
 
 
 
+    const ctx = useRef(null);
+    const enemyBarContext = ctx.current?.getContext('2d');
+    const [enemyPosition, setEnemyPosition] = useState({x: 100, y: 50});
+    useEnemyBar(ctx, enemyBarContext, enemyPosition, enemyHealth, lastMessage);
+
+
+
 
 
 
@@ -281,6 +288,22 @@ function App(){
                 msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
             }} 
           />
+          <canvas ref={ctx} 
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none',
+              zIndex: 1,
+              userSelect: "none",  // Prevent text selection
+              WebkitTouchCallout: "none",  // Prevent callout on long-press (iOS Safari)
+              WebkitUserSelect: "none",  // Prevent selection on iOS
+              KhtmlUserSelect: "none",  // Prevent selection on old versions of Konqueror browsers
+              MozUserSelect: "none",  // Prevent selection on Firefox
+              msUserSelect: "none",  // Prevent selection on Internet Explorer/Edge
+          }} />
           {/* If not connected to a lobby display a banner telling user to connect to a lobby */}
           {!isConnected && (
             <div style={{

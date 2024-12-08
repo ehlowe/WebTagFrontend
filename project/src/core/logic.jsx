@@ -35,6 +35,11 @@ function useHealthEffect(lastMessage, health, setHealth, prevHealth, enemyHealth
     }
 
     if ((health !=null)&&(enemyHealth !=null)){
+        // if (prevEnemyHealth!=enemyHealth){
+        //   console.log("lastMessage: ", lastMessage);
+        // }
+
+
         setHealth(health);
         setEnemyHealth(enemyHealth);
 
