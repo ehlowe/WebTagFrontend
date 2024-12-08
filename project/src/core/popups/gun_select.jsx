@@ -147,10 +147,10 @@ function loadNewGunSounds(loadSound,gun){
 
 
 const Guns = {
-  AR: {dmg: 25, rps: 12, mag: 20, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "auto"},
-  MiniGun: {dmg: 7, rps: 27, mag: 100, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "auto"},
-  Sniper: {dmg: 100, rps: 2, mag: 5, shoot_path: '/sounds/shoot/ScifiSniper.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "single"},
-  Shotgun: {dmg: "8x8", rps: 30, mag: 8, shoot_path: '/sounds/shoot/ShotGun.mp3', reload_path: '/sounds/reload/ShotGunReload.mp3', firing_mode: "single"},
+  AR: {dmg: 12, rps: 12, mag: 20, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "auto"},
+  MiniGun: {dmg: 5.5, rps: 27, mag: 100, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "auto"},
+  Sniper: {dmg: 80, rps: 1.3, mag: 5, shoot_path: '/sounds/shoot/ScifiSniper.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "single"},
+  Shotgun: {dmg: "7x7", rps: 30, mag: 8, shoot_path: '/sounds/shoot/ShotGun.mp3', reload_path: '/sounds/reload/ShotGunReload.mp3', firing_mode: "single"},
 }
 
 
