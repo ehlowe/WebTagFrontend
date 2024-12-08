@@ -82,7 +82,13 @@ function GunSelectPopup({selectedGun, setSelectedGun, currentGun, setCurrentGun}
                 style={{backgroundColor: selectedGun === 'Sniper' ? '#3B82F6' : 'white'}}
                 onClick={() => setSelectedGun('Sniper')}
               >
-                <b>Sniper</b>: 100 dmg, 1rps, 5/mag
+                <b>Sniper</b>: 100 dmg, 1.3rps, 5/mag
+              </button>
+              <button
+                style={{backgroundColor: selectedGun === 'Shotgun' ? '#3B82F6' : 'white'}}
+                onClick={() => setSelectedGun('Shotgun')}
+              >
+                <b>Shotgun</b>: 8 x8dmg, 30rps, 8/mag
               </button>
             </div>
 
@@ -108,7 +114,7 @@ function GunSelectPopup({selectedGun, setSelectedGun, currentGun, setCurrentGun}
 };
 
 
-function useGunSelectState(setGunDamage, setFireRate, setMagSize, setAmmo, loadSound){
+function useGunSelectState(setGunDamage, setFireRate, setMagSize, setAmmo, setFiringMode, loadSound){
     const [selectedGun, setSelectedGun] = useState("AR");
     const [currentGun, setCurrentGun] = useState("AR");
 
@@ -119,6 +125,7 @@ function useGunSelectState(setGunDamage, setFireRate, setMagSize, setAmmo, loadS
         setFireRate((1/Guns[currentGun].rps)*1000);
         setMagSize(Guns[currentGun].mag);
         loadNewGunSounds(loadSound, currentGun);
+        setFiringMode(Guns[currentGun].firing_mode);
     }, [currentGun]);
 
 
@@ -140,9 +147,10 @@ function loadNewGunSounds(loadSound,gun){
 
 
 const Guns = {
-  AR: {dmg: 25, rps: 10, mag: 20, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3'},
-  MiniGun: {dmg: 7, rps: 27, mag: 100, shoot_path: '/sounds/shoot/acr.mp3', reload_path: '/sounds/reload/VTreload.mp3'},
-  Sniper: {dmg: 100, rps: 1, mag: 5, shoot_path: '/sounds/shoot/bhew.mp3', reload_path: '/sounds/reload/VTreload.mp3'},
+  AR: {dmg: 25, rps: 12, mag: 20, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "auto"},
+  MiniGun: {dmg: 7, rps: 27, mag: 100, shoot_path: '/sounds/shoot/VTshoot_L.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "auto"},
+  Sniper: {dmg: 100, rps: 2, mag: 5, shoot_path: '/sounds/shoot/ScifiSniper.mp3', reload_path: '/sounds/reload/VTreload.mp3', firing_mode: "single"},
+  Shotgun: {dmg: "8x8", rps: 30, mag: 8, shoot_path: '/sounds/shoot/ShotGun.mp3', reload_path: '/sounds/reload/ShotGunReload.mp3', firing_mode: "single"},
 }
 
 

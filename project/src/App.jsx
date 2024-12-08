@@ -69,6 +69,7 @@ function App(){
     const [ ammo, setAmmo ] = useState(20);
     const [ mag_size, setMagSize ] = useState(20);
     const [ inReload, setInReload ] = useState(false);
+    const [ firingMode, setFiringMode ] = useState("auto");
 
     // Firing Logic
     // const fireRate=74;
@@ -151,16 +152,16 @@ function App(){
     // AUDIO
     const { loadSound, playSound, resumeAudioContext, initSound } = useAudioManager();
 
-    
 
-    const [selectedGun, setSelectedGun, currentGun, setCurrentGun] = useGunSelectState(setGunDamage, setFireRate, setMagSize, setAmmo, loadSound);
+
+    const [selectedGun, setSelectedGun, currentGun, setCurrentGun] = useGunSelectState(setGunDamage, setFireRate, setMagSize, setAmmo, setFiringMode, loadSound);
 
 
 
 
     // // GAME LOGIC
     // handle firing and trigger logic
-    const { isPressed, triggerPulled, fireColor, lastFiringTime, setIsPressed, shootPressed } = useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, playSound, health, sendMessage, videoRef);
+    const { isPressed, triggerPulled, fireColor, lastFiringTime, setIsPressed, shootPressed } = useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, playSound, health, sendMessage, videoRef, firingMode);
 
     function handlePressStart(){
       setIsPressed(true);

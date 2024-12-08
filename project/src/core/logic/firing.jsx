@@ -26,9 +26,10 @@ function reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReloa
 
 
 
-function useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, playSound, health, sendMessage, videoRef){
+function useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, playSound, health, sendMessage, videoRef, firingMode){
     const [isPressed, setIsPressed] = useState(false);
     const [triggerPulled, setTriggerPulled] = useState(false);
+    const [triggerPulledPrev, setTriggerPulledPrev] = useState(false);
     const [fireColor, setFireColor] = useState("gray");
     const [inReload, setInReload] = useState(false);
     const lastFiringTime = useRef(0);
@@ -83,32 +84,51 @@ function useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, play
     useEffect(() => {
         let shoot_check_interval = setInterval(() => {
             if (triggerPulled){
-                if (Date.now() - lastFiringTime.current >= fireRate){
-                    // sendImage();
-                    // console.log("TIME: ", Date.now() - lastFiringTime.current);
-                    lastFiringTime.current = Date.now();
-                    if ((ammo > 0)&&(health>0)){
-                        const newammo=ammo-1;
-                        setAmmo(newammo);
-                        // playSound('shoot');
-                        shootSoundRotation(shoot_audio_ref);
-    
-                        captureAndSendFrame(videoRef.current, sendMessage);
-                        if (newammo <= 0){
-                            reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time);
+                if (firingMode=="auto"){
+                    if (Date.now() - lastFiringTime.current >= fireRate){
+                        // sendImage();
+                        // console.log("TIME: ", Date.now() - lastFiringTime.current);
+                        lastFiringTime.current = Date.now();
+                        if ((ammo > 0)&&(health>0)){
+                            const newammo=ammo-1;
+                            setAmmo(newammo);
+                            // playSound('shoot');
+                            shootSoundRotation(shoot_audio_ref);
+        
+                            captureAndSendFrame(videoRef.current, sendMessage);
+                            if (newammo <= 0){
+                                reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time);
+                            }
+                        } 
+                    }
+                } else if (firingMode=="single"){
+                    console.log("SINGLE MODE:", triggerPulled, triggerPulledPrev, lastFiringTime.current);
+                    if (Date.now() - lastFiringTime.current >= fireRate){
+                        if (triggerPulled && !triggerPulledPrev){
+                            lastFiringTime.current = Date.now();
+                            if ((ammo > 0)&&(health>0)){
+                                const newammo=ammo-1;
+                                setAmmo(newammo);
+                                shootSoundRotation(shoot_audio_ref);
+                                captureAndSendFrame(videoRef.current, sendMessage);
+                                if (newammo <= 0){
+                                    reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time);
+                                }
+                            }
                         }
-                    } 
+                    }
                 }
             }
             else if (ammo==-1){
                 reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time);
             }
+            setTriggerPulledPrev(triggerPulled);
         }, 10);
         return () => {
             clearInterval(shoot_check_interval);
         }
     
-    }, [triggerPulled, lastFiringTime, ammo, health]);
+    }, [triggerPulled, triggerPulledPrev, lastFiringTime, ammo, health]);
 
 
     useEffect(() => {
