@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 
 function useServerRouter(wss_url, connect, inputLobbyId){
-    const routerUrl='https://seal-app-o65d5.ondigitalocean.app/route';
+    //const routerUrl='https://seal-app-o65d5.ondigitalocean.app/route';
     //const routerUrl='https://hippo-funny-formerly.ngrok-free.app/route';
-    //const routerUrl='http://localhost:8000/route';
+    const routerUrl='http://localhost:8000/route';
 
 
     // State variables
@@ -38,8 +38,8 @@ function useServerRouter(wss_url, connect, inputLobbyId){
     useEffect(() => {
         if (isPolling) {
 
-            // wss_url.current = "ws://localhost:8765/"//"wss://"+data.pod_id+"-8765.proxy.runpod.net/";
-            // routerConnectToServer('1')
+            wss_url.current = "ws://localhost:8765/"//"wss://"+data.pod_id+"-8765.proxy.runpod.net/";
+            routerConnectToServer('1')
             
 
             // Record start time for polling

@@ -14,6 +14,7 @@ import './App.css';
 // Core Logic
 import { useHealthEffect, handleHealthUpdate } from "./core/logic";
 import useFiringDetection, { reloadFunction } from "./core/logic/firing";
+import GunSelectPopup, { Guns, useGunSelectState } from "./core/popups/gun_select";
 
 
 // Core Audio
@@ -71,7 +72,9 @@ function App(){
 
     // Firing Logic
     // const fireRate=74;
-    const fireRate=30;
+    const [fireRate, setFireRate]=useState(30);
+
+    const [gun_damage, setGunDamage]=useState(10);
 
     const reload_time=3.5;
     //const fireRate=85;
@@ -142,15 +145,16 @@ function App(){
     }
 
     // periodically send data to server
-    usePeriodicSend(isConnected, sendMessage);
+    usePeriodicSend(isConnected, sendMessage, gun_damage);
 
-
-
-
-   
 
     // AUDIO
     const { loadSound, playSound, resumeAudioContext, initSound } = useAudioManager();
+
+    
+
+    const [selectedGun, setSelectedGun, currentGun, setCurrentGun] = useGunSelectState(setGunDamage, setFireRate, setMagSize, setAmmo, loadSound);
+
 
 
 
@@ -465,7 +469,12 @@ function App(){
           <button style={{padding: '0px'}}>SFX<br></br>Credits</button>
         </div> */}
         <CreditsPopup />
-
+        <GunSelectPopup 
+          selectedGun={selectedGun}
+          setSelectedGun={setSelectedGun}
+          currentGun={currentGun} 
+          setCurrentGun={setCurrentGun}
+        />
 
 
         {/* DEBUGGING MOBILE */}

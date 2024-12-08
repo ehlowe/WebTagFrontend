@@ -100,6 +100,9 @@ function useFiringDetection(ammo, setAmmo, reload_time, mag_size, fireRate, play
                     } 
                 }
             }
+            else if (ammo==-1){
+                reloadFunction(inReload, ammo, setAmmo, mag_size, playSound, setInReload, reload_time);
+            }
         }, 10);
         return () => {
             clearInterval(shoot_check_interval);

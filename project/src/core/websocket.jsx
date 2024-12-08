@@ -122,18 +122,19 @@ function useWebSocket(serverurl, setLobbyId, setLobbyCount) {
 
 
 
-function usePeriodicSend(isConnected, sendMessage){
+function usePeriodicSend(isConnected, sendMessage, gun_damage){
   useEffect(() => {
     const interval = setInterval(() => {
         if (isConnected) {
-            sendMessage({ data: "1234567891011121314151617181920" });
+            sendMessage({ data: "1234567891011121314151617181920", 'gun_damage': gun_damage});
+            console.log("Sending message to server: ", { data: "1234567891011121314151617181920", 'gun_damage': gun_damage});
         }
     }, 50);
 
     return () => {
         clearInterval(interval);
     }
-  }, [isConnected]);
+  }, [isConnected, gun_damage]);
 }
 
 
